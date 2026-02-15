@@ -1,0 +1,546 @@
+﻿<Window x:Class="NetworkPresetSwitcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NetworkPresetSwitcher"
+        xmlns:models="clr-namespace:NetworkPresetSwitcher.Models"
+        mc:Ignorable="d"
+        Title="{DynamicResource App.Title}"
+        Width="1180"
+        Height="860"
+        MinWidth="1000"
+        MinHeight="720"
+        WindowStartupLocation="CenterScreen">
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewPresetCommand}" />
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding EditPresetCommand}" />
+        <KeyBinding Key="Delete" Command="{Binding DeletePresetCommand}" />
+        <KeyBinding Key="F5" Command="{Binding RefreshAdaptersCommand}" />
+        <KeyBinding Key="Enter" Command="{Binding ApplyCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid IsHitTestVisible="False">
+            <Ellipse Width="520"
+                     Height="520"
+                     HorizontalAlignment="Left"
+                     VerticalAlignment="Top"
+                     Margin="-180,-160,0,0"
+                     Opacity="0.18">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#5EEAD4" Offset="0" />
+                        <GradientStop Color="#F5F7FB" Offset="1" />
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse Width="460"
+                     Height="460"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom"
+                     Margin="0,0,-160,-140"
+                     Opacity="0.16">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#93C5FD" Offset="0" />
+                        <GradientStop Color="#EBF1F7" Offset="1" />
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+        </Grid>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource CardAnimated}" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="3*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                            <TextBlock Text="&#xE701;" Style="{StaticResource IconText}" Margin="0,2,8,0" />
+                            <TextBlock Text="{DynamicResource Main.ActiveAdapter.Title}" Style="{StaticResource SectionTitle}" />
+                        </StackPanel>
+                        <TextBlock Text="{DynamicResource Main.ActiveAdapter.Hint}" Style="{StaticResource SubtleText}" Margin="0,2,0,10" />
+                        <StackPanel>
+                            <ComboBox MinWidth="220"
+                                      MaxWidth="520"
+                                      Margin="0,0,0,8"
+                                      ItemsSource="{Binding Adapters}"
+                                      SelectedItem="{Binding SelectedAdapter}"
+                                      ToolTip="{Binding SelectedAdapter.DisplayName}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Style="{StaticResource GhostButton}" Command="{Binding RefreshAdaptersCommand}" Margin="0,0,8,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE72C;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Refresh}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource GhostButton}" Command="{Binding OpenNetworkConnectionsCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE713;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.NetworkSettings}" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <Grid Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE9D2;" Style="{StaticResource IconText}" Margin="0,2,8,0" />
+                                <TextBlock Text="{DynamicResource Main.Section.CurrentStatus}" Style="{StaticResource SectionTitle}" />
+                            </StackPanel>
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource GhostButton}"
+                                        Margin="0,0,8,0"
+                                        Padding="12,6"
+                                        Command="{Binding ShowVersionCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE946;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Version}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource GhostButton}"
+                                        Padding="12,6"
+                                        Command="{Binding ToggleLanguageCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE12B;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.LanguageToggle}" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                        </Grid>
+                        <WrapPanel Margin="0,8,0,0">
+                            <Border Style="{StaticResource Badge}" Background="{StaticResource BrushSuccessLight}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="{Binding CurrentStatusBadge}" Foreground="#166534" />
+                            </Border>
+                            <Border Style="{StaticResource Badge}" Background="{StaticResource BrushInfoLight}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="{Binding CurrentModeBadge}" Foreground="#075985" />
+                            </Border>
+                            <Border Style="{StaticResource Badge}" Background="{StaticResource BrushInfoLight}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="{Binding CurrentIpBadge}" Foreground="#0B5C73" />
+                            </Border>
+                            <Border Style="{StaticResource Badge}" Background="{StaticResource BrushNeutralLight}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="{Binding CurrentGatewayBadge}" Foreground="#334155" />
+                            </Border>
+                            <Border Style="{StaticResource Badge}" Background="{StaticResource BrushNeutralLight}">
+                                <TextBlock Style="{StaticResource BadgeText}" Text="{Binding CurrentDnsBadge}" Foreground="#334155" />
+                            </Border>
+                        </WrapPanel>
+                        <StackPanel Margin="0,8,0,0">
+                            <TextBlock Text="{Binding SelectedAdapter.DetailLine}" Style="{StaticResource SubtleText}" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource SubtleText}" TextWrapping="Wrap" Margin="0,2,0,0">
+                                <Run Text="{DynamicResource Main.Label.AdapterName}" />
+                                <Run Text=" " />
+                                <Run Text="{Binding SelectedAdapter.DeviceName, Mode=OneWay}" />
+                                <Run Text=" / " />
+                                <Run Text="{DynamicResource Main.Label.Manufacturer}" />
+                                <Run Text=" " />
+                                <Run Text="{Binding SelectedAdapter.Manufacturer, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Style="{StaticResource CardAnimated}" Margin="0,0,12,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8FD;" Style="{StaticResource IconText}" Margin="0,2,8,0" />
+                                    <TextBlock Text="{DynamicResource Main.Section.Presets}" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Command="{Binding NewPresetCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" Foreground="White" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Add}" Foreground="White" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1" Margin="0,12,0,14">
+                                <TextBlock Text="{DynamicResource Main.Label.Search}" Style="{StaticResource SubtleText}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <ListBox Grid.Row="2"
+                                     ItemContainerStyle="{StaticResource PresetItemStyle}"
+                                     ItemsSource="{Binding PresetsView}"
+                                     SelectedItem="{Binding SelectedPreset}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                <ListBox.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.ContainerStyle>
+                                            <Style TargetType="{x:Type GroupItem}">
+                                                <Setter Property="Margin" Value="0,0,0,8" />
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                            <Expander IsExpanded="True">
+                                                                <Expander.Header>
+                                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                                </Expander.Header>
+                                                                <ItemsPresenter Margin="0,6,0,0" />
+                                                            </Expander>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </GroupStyle.ContainerStyle>
+                                    </GroupStyle>
+                                </ListBox.GroupStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:NetworkPreset}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding IpLine}"
+                                                       Foreground="{StaticResource BrushMuted}"
+                                                       Margin="0,2,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Style="{StaticResource CardAnimated}" Margin="0,0,12,0" Padding="4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{DynamicResource Main.Label.Ping}"
+                                       Style="{StaticResource SubtleText}"
+                                       Margin="0,2,8,0" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding PingTarget, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsPinging, Converter={StaticResource InverseBool}}"
+                                     MinHeight="24"
+                                     Padding="6,3"
+                                     Margin="0,0,8,0" />
+                            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Command="{Binding PingCommand}"
+                                    MinHeight="24" MinWidth="72" Padding="10,3">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE704;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{DynamicResource Main.Button.Ping}" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                <Border Grid.Row="0" Style="{StaticResource CardAnimated}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8F1;" Style="{StaticResource IconText}" Margin="0,2,8,0" />
+                                <TextBlock Text="{DynamicResource Main.Section.PresetDetails}" Style="{StaticResource SectionTitle}" />
+                            </StackPanel>
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Command="{Binding ApplyCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE73E;" Style="{StaticResource IconText}" Foreground="White" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Apply}" Foreground="White" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource GhostButton}" Margin="0,0,8,0" Command="{Binding EditPresetCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Edit}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource GhostButton}" Margin="0,0,8,0" Command="{Binding DuplicatePresetCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE8C8;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Duplicate}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource GhostButton}" Command="{Binding DeletePresetCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74D;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                        <TextBlock Text="{DynamicResource Main.Button.Delete}" />
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,12,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{DynamicResource Main.Label.Mode}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" IsEnabled="{Binding IsEditing}">
+                                <ToggleButton Content="{DynamicResource Main.Label.Dhcp}"
+                                              Style="{StaticResource SegmentButtonLeft}"
+                                              IsChecked="{Binding EditingPreset.IsDhcp, Mode=TwoWay}" />
+                                <ToggleButton Content="{DynamicResource Main.Label.Static}"
+                                              Style="{StaticResource SegmentButtonRight}"
+                                              IsChecked="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="2"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <Grid IsEnabled="{Binding IsEditing}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="{DynamicResource Main.Label.Name}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding EditingPreset.Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="1" Text="{DynamicResource Main.Label.Group}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Text="{Binding EditingPreset.Group, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="2" Text="{DynamicResource Main.Label.IpAddress}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="2" Grid.Column="1"
+                                         Text="{Binding EditingPreset.IP, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}}"
+                                         BorderBrush="{Binding IsIpInvalid, Converter={StaticResource BoolToDangerBrush}}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="3" Text="{DynamicResource Main.Label.Subnet}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="3" Grid.Column="1"
+                                         Text="{Binding EditingPreset.Subnet, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}}"
+                                         BorderBrush="{Binding IsSubnetInvalid, Converter={StaticResource BoolToDangerBrush}}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="4" Text="{DynamicResource Main.Label.Gateway}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="4" Grid.Column="1"
+                                         Text="{Binding EditingPreset.Gateway, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}}"
+                                         BorderBrush="{Binding IsGatewayInvalid, Converter={StaticResource BoolToDangerBrush}}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="5" Text="{DynamicResource Main.Label.Dns1}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="5" Grid.Column="1"
+                                         Text="{Binding EditingPreset.DNS1, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}}"
+                                         BorderBrush="{Binding IsDns1Invalid, Converter={StaticResource BoolToDangerBrush}}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="6" Text="{DynamicResource Main.Label.Dns2}" VerticalAlignment="Center" Margin="0,0,12,10" />
+                                <TextBox Grid.Row="6" Grid.Column="1"
+                                         Text="{Binding EditingPreset.DNS2, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding EditingPreset.IsDhcp, Converter={StaticResource InverseBool}}"
+                                         BorderBrush="{Binding IsDns2Invalid, Converter={StaticResource BoolToDangerBrush}}"
+                                         Margin="0,0,0,10" />
+
+                                <TextBlock Grid.Row="7" Text="{DynamicResource Main.Label.Comment}" VerticalAlignment="Top" Margin="0,8,12,0" />
+                                <TextBox Grid.Row="7" Grid.Column="1"
+                                         Text="{Binding EditingPreset.Comment, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         Height="80" />
+                            </Grid>
+                        </ScrollViewer>
+
+                        <Border Grid.Row="3"
+                                Style="{StaticResource AlertCard}"
+                                Margin="0,14,0,0"
+                                Visibility="{Binding IsErrorVisible, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="&#xE783;" Style="{StaticResource IconText}" Foreground="{StaticResource BrushDanger}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding ErrorTitle}" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding ErrorDetail}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <TextBlock Text="{DynamicResource Main.Error.Cause}" FontWeight="SemiBold" Visibility="{Binding HasErrorCause, Converter={StaticResource BoolToVisibility}}" />
+                                <TextBlock Text="{Binding ErrorCause}" TextWrapping="Wrap" Margin="0,2,0,6"
+                                           Visibility="{Binding HasErrorCause, Converter={StaticResource BoolToVisibility}}" />
+                                <TextBlock Text="{DynamicResource Main.Error.Fix}" FontWeight="SemiBold" Visibility="{Binding HasErrorFix, Converter={StaticResource BoolToVisibility}}" />
+                                <TextBlock Text="{Binding ErrorFix}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                           Visibility="{Binding HasErrorFix, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Command="{Binding SavePresetCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74E;" Style="{StaticResource IconText}" Foreground="White" Margin="0,0,6,0" />
+                                    <TextBlock Text="{DynamicResource Main.Button.Save}" Foreground="White" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource GhostButton}" Command="{Binding CancelEditCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE711;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{DynamicResource Main.Button.Cancel}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="1" Style="{StaticResource CardAnimated}" MinHeight="180" MaxHeight="220">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE81C;" Style="{StaticResource IconText}" Margin="0,2,8,0" />
+                            <TextBlock Text="{DynamicResource Main.Section.Activity}" Style="{StaticResource SectionTitle}" />
+                        </StackPanel>
+                            <Grid Grid.Column="1" Margin="12,0,12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Main.Label.StoragePath}"
+                                           Style="{StaticResource SubtleText}"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,6,0" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding PresetsStoragePath, Mode=OneWay}"
+                                         IsReadOnly="True"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Padding="0"
+                                         VerticalAlignment="Center"
+                                         VerticalContentAlignment="Center"
+                                         Foreground="{StaticResource BrushMuted}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Margin" Value="0" />
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                    <TextBox.InputBindings>
+                                        <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenPresetsFolderCommand}" />
+                                        <KeyBinding Key="Enter" Command="{Binding OpenPresetsFolderCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <Button Grid.Column="2" Style="{StaticResource GhostButton}" Command="{Binding OpenPresetsFolderCommand}"
+                                        MinHeight="24" MinWidth="24" Padding="6,2" Margin="8,0,0,0"
+                                        ToolTip="{DynamicResource Main.Button.OpenFolder}">
+                                    <TextBlock Text="&#xE8B7;" Style="{StaticResource IconText}" />
+                                </Button>
+                            </Grid>
+                            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Command="{Binding ClearActivityCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE711;" Style="{StaticResource IconText}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{DynamicResource Main.Button.Clear}" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <ListBox Grid.Row="1"
+                                 Margin="0,8,0,0"
+                                 ItemsSource="{Binding Activity}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8"
+                                                 Height="8"
+                                                 Fill="{Binding Level, Converter={StaticResource ActivityLevelToBrush}}"
+                                                 Margin="0,6,8,0" />
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold">
+                                                <Run Text="{Binding TimeText, Mode=OneWay}" />
+                                                <Run Text="  " />
+                                                <Run Text="{Binding Title, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Detail, Mode=OneWay}"
+                                                       Foreground="{StaticResource BrushMuted}"
+                                                       ToolTip="{Binding Detail, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
+

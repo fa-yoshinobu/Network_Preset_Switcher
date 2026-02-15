@@ -1,0 +1,38 @@
+﻿# Build outputs
+bin/
+obj/
+
+# Visual Studio
+.vs/
+
+# Rider
+.idea/
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# Publish outputs
+**/publish/
+
+# Generated docs
+*.tmp
+
+# Local data
+NetworkPresetSwitcher.csv
+
+# Dist outputs
+dist/
+NetworkPresetSwitcher/dist/
+
+# Shortcuts
+*.lnk
+
+# OS
+.DS_Store
+Thumbs.db

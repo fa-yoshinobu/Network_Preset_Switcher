@@ -1,0 +1,189 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="App.Title">ネットワーク プリセット スイッチャー</sys:String>
+
+    <sys:String x:Key="Main.ActiveAdapter.Title">アクティブなアダプタ</sys:String>
+    <sys:String x:Key="Main.ActiveAdapter.Hint">設定するアダプタを選択してください</sys:String>
+    <sys:String x:Key="Main.Button.Refresh">更新</sys:String>
+    <sys:String x:Key="Main.Button.NetworkSettings">ネットワーク設定</sys:String>
+    <sys:String x:Key="Main.Section.CurrentStatus">現在の状態</sys:String>
+    <sys:String x:Key="Main.Button.Version">バージョン</sys:String>
+    <sys:String x:Key="Main.Button.License">ライセンス</sys:String>
+    <sys:String x:Key="Main.Button.LanguageToggle">EN</sys:String>
+
+    <sys:String x:Key="Main.Section.Presets">プリセット</sys:String>
+    <sys:String x:Key="Main.Button.Add">追加</sys:String>
+    <sys:String x:Key="Main.Label.Search">検索</sys:String>
+
+    <sys:String x:Key="Main.Section.PresetDetails">プリセット詳細</sys:String>
+    <sys:String x:Key="Main.Button.Apply">適用</sys:String>
+    <sys:String x:Key="Main.Button.Edit">編集</sys:String>
+    <sys:String x:Key="Main.Button.Duplicate">複製</sys:String>
+    <sys:String x:Key="Main.Button.Delete">削除</sys:String>
+
+    <sys:String x:Key="Main.Label.Mode">モード</sys:String>
+    <sys:String x:Key="Main.Label.Dhcp">DHCP</sys:String>
+    <sys:String x:Key="Main.Label.Static">固定</sys:String>
+    <sys:String x:Key="Main.Label.Name">名前</sys:String>
+    <sys:String x:Key="Main.Label.Group">グループ</sys:String>
+    <sys:String x:Key="Main.Label.AdapterName">デバイス:</sys:String>
+    <sys:String x:Key="Main.Label.IpAddress">IPアドレス</sys:String>
+    <sys:String x:Key="Main.Label.Subnet">サブネットマスク</sys:String>
+    <sys:String x:Key="Main.Label.Gateway">ゲートウェイ</sys:String>
+    <sys:String x:Key="Main.Label.Dns1">DNS 1</sys:String>
+    <sys:String x:Key="Main.Label.Dns2">DNS 2</sys:String>
+    <sys:String x:Key="Main.Label.Comment">コメント</sys:String>
+    <sys:String x:Key="Main.Label.Manufacturer">メーカー:</sys:String>
+    <sys:String x:Key="Main.Label.StoragePath">保存先:</sys:String>
+    <sys:String x:Key="Main.Label.Ping">Ping:</sys:String>
+
+    <sys:String x:Key="Main.Button.Save">保存</sys:String>
+    <sys:String x:Key="Main.Button.Cancel">キャンセル</sys:String>
+
+    <sys:String x:Key="Main.Section.Activity">操作ログ</sys:String>
+    <sys:String x:Key="Main.Button.Clear">クリア</sys:String>
+    <sys:String x:Key="Main.Button.Ping">Ping</sys:String>
+    <sys:String x:Key="Main.Button.OpenFolder">フォルダを開く</sys:String>
+
+    <sys:String x:Key="Main.Error.Cause">原因</sys:String>
+    <sys:String x:Key="Main.Error.Fix">対処</sys:String>
+
+    <sys:String x:Key="Preset.Unnamed">（名称未設定）</sys:String>
+    <sys:String x:Key="Preset.Group.Ungrouped">未分類</sys:String>
+    <sys:String x:Key="Preset.Ip.NotSet">IP未設定</sys:String>
+    <sys:String x:Key="Preset.DuplicateSuffix">（コピー）</sys:String>
+    <sys:String x:Key="Preset.DuplicateSuffixWithNumber">（コピー {0}）</sys:String>
+
+    <sys:String x:Key="Version.Title">バージョン情報</sys:String>
+    <sys:String x:Key="Version.Runtime">実行環境: {0}</sys:String>
+    <sys:String x:Key="Version.Label.Author">作者:</sys:String>
+    <sys:String x:Key="Version.Label.GitHub">GitHub:</sys:String>
+    <sys:String x:Key="Version.Tab.Libraries">ライブラリ</sys:String>
+    <sys:String x:Key="Version.Tab.Licenses">ライセンス</sys:String>
+    <sys:String x:Key="Version.Column.Library">ライブラリ</sys:String>
+    <sys:String x:Key="Version.Column.Version">バージョン</sys:String>
+    <sys:String x:Key="Version.Column.License">ライセンス</sys:String>
+    <sys:String x:Key="Version.Column.Description">説明</sys:String>
+
+    <sys:String x:Key="License.Title">ライセンス情報</sys:String>
+    <sys:String x:Key="License.Column.Library">ライブラリ</sys:String>
+    <sys:String x:Key="License.Column.Version">バージョン</sys:String>
+    <sys:String x:Key="License.Column.License">ライセンス</sys:String>
+    <sys:String x:Key="License.Button.OpenUrl">URLを開く</sys:String>
+
+    <sys:String x:Key="Common.Button.Close">閉じる</sys:String>
+
+    <sys:String x:Key="Status.Connected">接続中</sys:String>
+    <sys:String x:Key="Status.Disconnected">切断</sys:String>
+    <sys:String x:Key="Mode.Dhcp">DHCP</sys:String>
+    <sys:String x:Key="Mode.Static">固定</sys:String>
+    <sys:String x:Key="Text.NotSet">未設定</sys:String>
+    <sys:String x:Key="Label.Ipv4NotSet">IPv4 未設定</sys:String>
+    <sys:String x:Key="Label.GwNotSet">GW 未設定</sys:String>
+    <sys:String x:Key="Label.DnsNotSet">DNS 未設定</sys:String>
+
+    <sys:String x:Key="Adapter.Type.Ethernet">有線LAN</sys:String>
+    <sys:String x:Key="Adapter.Type.Wireless">無線LAN</sys:String>
+    <sys:String x:Key="Adapter.Type.Loopback">ループバック</sys:String>
+    <sys:String x:Key="Adapter.Type.Ppp">PPP</sys:String>
+    <sys:String x:Key="Adapter.Type.Tunnel">トンネル</sys:String>
+
+    <sys:String x:Key="Label.Adapter">アダプタ</sys:String>
+    <sys:String x:Key="Label.Preset">プリセット</sys:String>
+
+    <sys:String x:Key="Msg.ErrorDetailHeader">エラー詳細:</sys:String>
+    <sys:String x:Key="Msg.AdapterDetailHeader">アダプタ詳細情報:</sys:String>
+    <sys:String x:Key="Activity.PresetSavedTitle">プリセット保存</sys:String>
+    <sys:String x:Key="Activity.PresetDeletedTitle">プリセット削除</sys:String>
+    <sys:String x:Key="Activity.PingTitle">Ping</sys:String>
+    <sys:String x:Key="Activity.PresetDuplicatedTitle">プリセット複製</sys:String>
+
+    <sys:String x:Key="Msg.AppReadyTitle">起動完了</sys:String>
+    <sys:String x:Key="Msg.AppReadyDetail">アプリケーションの初期化が完了しました。</sys:String>
+    <sys:String x:Key="Msg.AdaptersRefreshedTitle">アダプタを更新しました</sys:String>
+    <sys:String x:Key="Msg.AdaptersRefreshedDetail">{0} 件のアダプタを取得しました。</sys:String>
+    <sys:String x:Key="Msg.PresetSaved">'{0}' を保存しました。</sys:String>
+    <sys:String x:Key="Msg.PresetDeleted">'{0}' を削除しました。</sys:String>
+    <sys:String x:Key="Msg.PresetDuplicated">'{0}' を複製しました。</sys:String>
+    <sys:String x:Key="Msg.ApplyTitle">適用完了</sys:String>
+    <sys:String x:Key="Msg.ApplyDetail">'{0}' を {1} に適用しました。</sys:String>
+    <sys:String x:Key="Msg.ApplyDhcpComplete">DHCP設定を適用しました。</sys:String>
+    <sys:String x:Key="Msg.ApplyComplete">設定を適用しました。</sys:String>
+
+    <sys:String x:Key="Msg.ErrorTitle">エラー</sys:String>
+    <sys:String x:Key="Msg.ConfirmTitle">確認</sys:String>
+    <sys:String x:Key="Msg.DoneTitle">完了</sys:String>
+    <sys:String x:Key="Msg.InfoTitle">情報</sys:String>
+    <sys:String x:Key="Msg.WarningTitle">警告</sys:String>
+    <sys:String x:Key="Msg.ApplyFailedTitle">設定の適用に失敗しました</sys:String>
+    <sys:String x:Key="Msg.ErrorDuplicatePreset">同名のプリセットが既に存在します。別の名前を指定してください。</sys:String>
+    <sys:String x:Key="Msg.ErrorEmptyName">プリセット名を入力してください。</sys:String>
+    <sys:String x:Key="Msg.ErrorEmptyIp">IPアドレスを入力してください。</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidIp">IPアドレスが正しくありません。</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidSubnet">サブネットマスクが正しくありません。</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidGateway">ゲートウェイが正しくありません。</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidDns1">DNS1が正しくありません。</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidDns2">DNS2が正しくありません。</sys:String>
+    <sys:String x:Key="Msg.PingSuccess">{0} から応答 time={1}ms</sys:String>
+    <sys:String x:Key="Msg.PingFailed">Ping 失敗: {0}</sys:String>
+    <sys:String x:Key="Network.Error.AdminRequired">ネットワーク設定の適用には管理者権限が必要です。&#x0A;アプリケーションを管理者として実行してください。</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterFailed">アダプタ '{0}' の有効化に失敗しました。&#x0A;現在の状態: {1}&#x0A;&#x0A;考えられる原因:&#x0A;- LANケーブルが接続されていない&#x0A;- ネットワークアダプタのドライバーに問題がある&#x0A;- 物理的な接続に問題がある&#x0A;&#x0A;対処方法:&#x0A;1. LANケーブルが正しく接続されているか確認&#x0A;2. ネットワークアダプタのドライバーを更新&#x0A;3. デバイスマネージャーでアダプタの状態を確認</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterFailedWithError">アダプタ '{0}' の有効化に失敗しました。&#x0A;現在の状態: {1}&#x0A;&#x0A;有効化エラー: {2}&#x0A;&#x0A;考えられる原因:&#x0A;- LANケーブルが接続されていない&#x0A;- ネットワークアダプタのドライバーに問題がある&#x0A;- 物理的な接続に問題がある&#x0A;&#x0A;対処方法:&#x0A;1. LANケーブルが正しく接続されているか確認&#x0A;2. ネットワークアダプタのドライバーを更新&#x0A;3. デバイスマネージャーでアダプタの状態を確認</sys:String>
+    <sys:String x:Key="Network.Error.AdapterNotUp">アダプタ '{0}' が有効になっていません。&#x0A;現在の状態: {1}&#x0A;アダプタを有効にしてから再試行してください。</sys:String>
+    <sys:String x:Key="Network.Error.DhcpApplyFailed">DHCP設定の適用に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;netshエラー:&#x0A;{3}&#x0A;&#x0A;WMIエラー:&#x0A;{4}</sys:String>
+    <sys:String x:Key="Network.Error.StaticIpApplyFailed">IPアドレスの設定に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;エラー詳細:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.Dns1ApplyFailed">DNSサーバー1の設定に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;エラー詳細:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.Dns2ApplyFailed">DNSサーバー2の設定に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;エラー詳細:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Info.AdapterName">アダプタ名: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Description">説明: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Status">状態: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Type">種類: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Speed">速度: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Mac">MACアドレス: {0}</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssueHeader">&#x0A;物理的な接続の問題が考えられます:</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue1">- LANケーブルが接続されていない可能性</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue2">- ネットワークアダプタのドライバーに問題がある可能性</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue3">- 物理的な接続に問題がある可能性</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterError">有効化エラー: {0}</sys:String>
+    <sys:String x:Key="Network.Error.MacNotAvailable">取得失敗</sys:String>
+    <sys:String x:Key="Network.Error.DhcpApplyFailedNetsh">DHCP設定の適用に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;エラー詳細:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.DnsDhcpApplyFailed">DNSのDHCP設定の適用に失敗しました。&#x0A;アダプタ: {0}&#x0A;アダプタ状態: {1}&#x0A;アダプタ種類: {2}&#x0A;&#x0A;エラー詳細:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementMissing">System.Managementアセンブリが見つかりません。.NET Runtimeが正しくインストールされているか確認してください。</sys:String>
+    <sys:String x:Key="Network.Error.WmiAdapterNotFound">WMIでアダプタ設定 '{0}' が見つかりませんでした。</sys:String>
+    <sys:String x:Key="Network.Error.WmiDhcpFailed">WMIでDHCP設定の適用に失敗しました。戻り値: {0}</sys:String>
+    <sys:String x:Key="Network.Error.WmiApplyFailed">WMIを使用したDHCP設定の適用に失敗しました: {0}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementLoadFailed">System.Managementアセンブリの読み込みに失敗しました。.NET Runtimeが正しくインストールされているか確認してください。&#x0A;&#x0A;エラー詳細: {0}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementNotFound">System.Managementアセンブリが見つかりません。.NET Runtimeを再インストールしてください。&#x0A;&#x0A;エラー詳細: {0}</sys:String>
+    <sys:String x:Key="Network.Error.ProcessStartFailed">プロセスの起動に失敗しました。</sys:String>
+    <sys:String x:Key="Network.Error.CommandFailed">コマンドの実行に失敗しました: {0}&#x0A;終了コード: {1}&#x0A;&#x0A;標準エラー出力:&#x0A;{2}&#x0A;&#x0A;標準出力:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.CommandFailedWithError">コマンドの実行に失敗しました: {0}&#x0A;&#x0A;エラー詳細: {1}</sys:String>
+    <sys:String x:Key="Network.Error.ExitCodeDetail">終了コード: {0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.StdErrorDetail">標準エラー出力:&#x0A;{0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.StdOutDetail">標準出力:&#x0A;{0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.ErrorInfoFailed">エラー情報の取得に失敗: {0}</sys:String>
+    <sys:String x:Key="Msg.ConfirmDelete">選択したプリセットを削除しますか？</sys:String>
+    <sys:String x:Key="Msg.ConfirmWireless">Wi-Fiの設定を変更しようとしています。&#x0A;接続が切断される可能性があります。&#x0A;&#x0A;続行しますか？</sys:String>
+
+    <sys:String x:Key="Msg.LoadPresetsFailed">プリセットの読み込みに失敗しました。&#x0A;&#x0A;エラー: {0}</sys:String>
+    <sys:String x:Key="Msg.SavePresetsFailed">プリセットの保存に失敗しました。&#x0A;&#x0A;場所: {0}&#x0A;&#x0A;エラー: {1}</sys:String>
+    <sys:String x:Key="Msg.OpenNetworkSettingsFailed">ネットワーク設定を開けませんでした。&#x0A;&#x0A;エラー: {0}</sys:String>
+    <sys:String x:Key="Msg.OpenFolderMissing">フォルダが見つかりません。</sys:String>
+    <sys:String x:Key="Msg.OpenFolderFailed">フォルダを開けませんでした。&#x0A;&#x0A;エラー: {0}</sys:String>
+    <sys:String x:Key="Msg.CsvInUseReason">CSVが別のアプリ（Excel）で開かれています。閉じてから保存してください。</sys:String>
+    <sys:String x:Key="Msg.CsvAccessDeniedReason">アプリのフォルダーに書き込む権限がありません。</sys:String>
+    <sys:String x:Key="Msg.LanguageColumnMissing">CSVにLanguage列がありません。言語設定は英語になります。Language列を追加してください。</sys:String>
+    <sys:String x:Key="Msg.CsvEncodingFallback">CSVをUTF-8で読み込めないため、CP932で読み込みました。</sys:String>
+    <sys:String x:Key="Msg.CsvHeaderMissing">CSVのヘッダー行が見つかりません。既定の列順で読み込み、ヘッダー付きで保存します。</sys:String>
+    <sys:String x:Key="Msg.SettingsRowMissing">Settings行が見つかりません。言語は英語になり、設定行を追加して保存します。</sys:String>
+
+    <sys:String x:Key="Error.Marker.Cause">原因:</sys:String>
+    <sys:String x:Key="Error.Marker.Fix">対処:</sys:String>
+
+    <sys:String x:Key="Library.App.Description">アプリ本体</sys:String>
+    <sys:String x:Key="Library.SystemTextJson.Description">JSONのシリアライゼーション/デシリアライゼーション</sys:String>
+    <sys:String x:Key="Library.SystemManagement.Description">WMIへのアクセスを提供するライブラリ</sys:String>
+    <sys:String x:Key="Library.SystemTextEncodingCodePages.Description">旧来の文字コードページを扱うための拡張</sys:String>
+    <sys:String x:Key="Library.DotNet.Description">.NET ランタイム</sys:String>
+    <sys:String x:Key="Library.Wpf.Description">Windows Presentation Foundation</sys:String>
+</ResourceDictionary>

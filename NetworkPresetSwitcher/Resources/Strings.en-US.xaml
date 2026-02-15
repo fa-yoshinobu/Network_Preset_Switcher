@@ -1,0 +1,189 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="App.Title">Network Preset Switcher</sys:String>
+
+    <sys:String x:Key="Main.ActiveAdapter.Title">Active Adapter</sys:String>
+    <sys:String x:Key="Main.ActiveAdapter.Hint">Select the adapter to configure</sys:String>
+    <sys:String x:Key="Main.Button.Refresh">Refresh</sys:String>
+    <sys:String x:Key="Main.Button.NetworkSettings">Network Settings</sys:String>
+    <sys:String x:Key="Main.Section.CurrentStatus">Current Status</sys:String>
+    <sys:String x:Key="Main.Button.Version">Version</sys:String>
+    <sys:String x:Key="Main.Button.License">License</sys:String>
+    <sys:String x:Key="Main.Button.LanguageToggle">JP</sys:String>
+
+    <sys:String x:Key="Main.Section.Presets">Presets</sys:String>
+    <sys:String x:Key="Main.Button.Add">Add</sys:String>
+    <sys:String x:Key="Main.Label.Search">Search</sys:String>
+
+    <sys:String x:Key="Main.Section.PresetDetails">Preset Details</sys:String>
+    <sys:String x:Key="Main.Button.Apply">Apply</sys:String>
+    <sys:String x:Key="Main.Button.Edit">Edit</sys:String>
+    <sys:String x:Key="Main.Button.Duplicate">Duplicate</sys:String>
+    <sys:String x:Key="Main.Button.Delete">Delete</sys:String>
+
+    <sys:String x:Key="Main.Label.Mode">Mode</sys:String>
+    <sys:String x:Key="Main.Label.Dhcp">DHCP</sys:String>
+    <sys:String x:Key="Main.Label.Static">Static</sys:String>
+    <sys:String x:Key="Main.Label.Name">Name</sys:String>
+    <sys:String x:Key="Main.Label.Group">Group</sys:String>
+    <sys:String x:Key="Main.Label.AdapterName">Device:</sys:String>
+    <sys:String x:Key="Main.Label.IpAddress">IP Address</sys:String>
+    <sys:String x:Key="Main.Label.Subnet">Subnet Mask</sys:String>
+    <sys:String x:Key="Main.Label.Gateway">Gateway</sys:String>
+    <sys:String x:Key="Main.Label.Dns1">DNS 1</sys:String>
+    <sys:String x:Key="Main.Label.Dns2">DNS 2</sys:String>
+    <sys:String x:Key="Main.Label.Comment">Comment</sys:String>
+    <sys:String x:Key="Main.Label.Manufacturer">Manufacturer:</sys:String>
+    <sys:String x:Key="Main.Label.StoragePath">Save location:</sys:String>
+    <sys:String x:Key="Main.Label.Ping">Ping:</sys:String>
+
+    <sys:String x:Key="Main.Button.Save">Save</sys:String>
+    <sys:String x:Key="Main.Button.Cancel">Cancel</sys:String>
+
+    <sys:String x:Key="Main.Section.Activity">Activity</sys:String>
+    <sys:String x:Key="Main.Button.Clear">Clear</sys:String>
+    <sys:String x:Key="Main.Button.Ping">Ping</sys:String>
+    <sys:String x:Key="Main.Button.OpenFolder">Open folder</sys:String>
+
+    <sys:String x:Key="Main.Error.Cause">Cause</sys:String>
+    <sys:String x:Key="Main.Error.Fix">Fix</sys:String>
+
+    <sys:String x:Key="Preset.Unnamed">(Unnamed preset)</sys:String>
+    <sys:String x:Key="Preset.Group.Ungrouped">Ungrouped</sys:String>
+    <sys:String x:Key="Preset.Ip.NotSet">IP not set</sys:String>
+    <sys:String x:Key="Preset.DuplicateSuffix">(Copy)</sys:String>
+    <sys:String x:Key="Preset.DuplicateSuffixWithNumber">(Copy {0})</sys:String>
+
+    <sys:String x:Key="Version.Title">Version Info</sys:String>
+    <sys:String x:Key="Version.Runtime">Runtime: {0}</sys:String>
+    <sys:String x:Key="Version.Label.Author">Author:</sys:String>
+    <sys:String x:Key="Version.Label.GitHub">GitHub:</sys:String>
+    <sys:String x:Key="Version.Tab.Libraries">Libraries</sys:String>
+    <sys:String x:Key="Version.Tab.Licenses">License</sys:String>
+    <sys:String x:Key="Version.Column.Library">Library</sys:String>
+    <sys:String x:Key="Version.Column.Version">Version</sys:String>
+    <sys:String x:Key="Version.Column.License">License</sys:String>
+    <sys:String x:Key="Version.Column.Description">Description</sys:String>
+
+    <sys:String x:Key="License.Title">Licenses</sys:String>
+    <sys:String x:Key="License.Column.Library">Library</sys:String>
+    <sys:String x:Key="License.Column.Version">Version</sys:String>
+    <sys:String x:Key="License.Column.License">License</sys:String>
+    <sys:String x:Key="License.Button.OpenUrl">Open URL</sys:String>
+
+    <sys:String x:Key="Common.Button.Close">Close</sys:String>
+
+    <sys:String x:Key="Status.Connected">Connected</sys:String>
+    <sys:String x:Key="Status.Disconnected">Disconnected</sys:String>
+    <sys:String x:Key="Mode.Dhcp">DHCP</sys:String>
+    <sys:String x:Key="Mode.Static">Static</sys:String>
+    <sys:String x:Key="Text.NotSet">Not set</sys:String>
+    <sys:String x:Key="Label.Ipv4NotSet">IPv4 not set</sys:String>
+    <sys:String x:Key="Label.GwNotSet">GW not set</sys:String>
+    <sys:String x:Key="Label.DnsNotSet">DNS not set</sys:String>
+
+    <sys:String x:Key="Adapter.Type.Ethernet">Ethernet</sys:String>
+    <sys:String x:Key="Adapter.Type.Wireless">Wi-Fi</sys:String>
+    <sys:String x:Key="Adapter.Type.Loopback">Loopback</sys:String>
+    <sys:String x:Key="Adapter.Type.Ppp">PPP</sys:String>
+    <sys:String x:Key="Adapter.Type.Tunnel">Tunnel</sys:String>
+
+    <sys:String x:Key="Label.Adapter">Adapter</sys:String>
+    <sys:String x:Key="Label.Preset">Preset</sys:String>
+
+    <sys:String x:Key="Msg.ErrorDetailHeader">Error details:</sys:String>
+    <sys:String x:Key="Msg.AdapterDetailHeader">Adapter details:</sys:String>
+    <sys:String x:Key="Activity.PresetSavedTitle">Preset saved</sys:String>
+    <sys:String x:Key="Activity.PresetDeletedTitle">Preset deleted</sys:String>
+    <sys:String x:Key="Activity.PingTitle">Ping</sys:String>
+    <sys:String x:Key="Activity.PresetDuplicatedTitle">Preset duplicated</sys:String>
+
+    <sys:String x:Key="Msg.AppReadyTitle">Ready</sys:String>
+    <sys:String x:Key="Msg.AppReadyDetail">Application initialized.</sys:String>
+    <sys:String x:Key="Msg.AdaptersRefreshedTitle">Adapters refreshed</sys:String>
+    <sys:String x:Key="Msg.AdaptersRefreshedDetail">{0} adapters found.</sys:String>
+    <sys:String x:Key="Msg.PresetSaved">Saved '{0}'.</sys:String>
+    <sys:String x:Key="Msg.PresetDeleted">Deleted '{0}'.</sys:String>
+    <sys:String x:Key="Msg.PresetDuplicated">Duplicated '{0}'.</sys:String>
+    <sys:String x:Key="Msg.ApplyTitle">Applied</sys:String>
+    <sys:String x:Key="Msg.ApplyDetail">Applied '{0}' to {1}.</sys:String>
+    <sys:String x:Key="Msg.ApplyDhcpComplete">DHCP settings applied.</sys:String>
+    <sys:String x:Key="Msg.ApplyComplete">Settings applied.</sys:String>
+
+    <sys:String x:Key="Msg.ErrorTitle">Error</sys:String>
+    <sys:String x:Key="Msg.ConfirmTitle">Confirm</sys:String>
+    <sys:String x:Key="Msg.DoneTitle">Done</sys:String>
+    <sys:String x:Key="Msg.InfoTitle">Info</sys:String>
+    <sys:String x:Key="Msg.WarningTitle">Warning</sys:String>
+    <sys:String x:Key="Msg.ApplyFailedTitle">Failed to apply settings</sys:String>
+    <sys:String x:Key="Msg.ErrorDuplicatePreset">A preset with the same name already exists. Choose another name.</sys:String>
+    <sys:String x:Key="Msg.ErrorEmptyName">Preset name is required.</sys:String>
+    <sys:String x:Key="Msg.ErrorEmptyIp">IP address is required.</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidIp">IP address is invalid.</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidSubnet">Subnet mask is invalid.</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidGateway">Gateway is invalid.</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidDns1">DNS1 is invalid.</sys:String>
+    <sys:String x:Key="Msg.ErrorInvalidDns2">DNS2 is invalid.</sys:String>
+    <sys:String x:Key="Msg.PingSuccess">Reply from {0} time={1}ms</sys:String>
+    <sys:String x:Key="Msg.PingFailed">Ping failed: {0}</sys:String>
+    <sys:String x:Key="Network.Error.AdminRequired">Administrator privileges are required to apply network settings.&#x0A;Please run the application as administrator.</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterFailed">Failed to enable adapter '{0}'.&#x0A;Current status: {1}&#x0A;&#x0A;Possible causes:&#x0A;- LAN cable is not connected&#x0A;- Network adapter driver issue&#x0A;- Physical connection problem&#x0A;&#x0A;How to fix:&#x0A;1. Check the LAN cable&#x0A;2. Update the adapter driver&#x0A;3. Check the adapter status in Device Manager</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterFailedWithError">Failed to enable adapter '{0}'.&#x0A;Current status: {1}&#x0A;&#x0A;Enable error: {2}&#x0A;&#x0A;Possible causes:&#x0A;- LAN cable is not connected&#x0A;- Network adapter driver issue&#x0A;- Physical connection problem&#x0A;&#x0A;How to fix:&#x0A;1. Check the LAN cable&#x0A;2. Update the adapter driver&#x0A;3. Check the adapter status in Device Manager</sys:String>
+    <sys:String x:Key="Network.Error.AdapterNotUp">Adapter '{0}' is not enabled.&#x0A;Current status: {1}&#x0A;Enable the adapter and try again.</sys:String>
+    <sys:String x:Key="Network.Error.DhcpApplyFailed">Failed to apply DHCP settings.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;netsh error:&#x0A;{3}&#x0A;&#x0A;WMI error:&#x0A;{4}</sys:String>
+    <sys:String x:Key="Network.Error.StaticIpApplyFailed">Failed to set IP address.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;Error detail:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.Dns1ApplyFailed">Failed to set DNS server 1.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;Error detail:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.Dns2ApplyFailed">Failed to set DNS server 2.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;Error detail:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Info.AdapterName">Adapter name: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Description">Description: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Status">Status: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Type">Type: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Speed">Speed: {0}</sys:String>
+    <sys:String x:Key="Network.Info.Mac">MAC Address: {0}</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssueHeader">&#x0A;Possible physical connection issues:</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue1">- LAN cable may be disconnected</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue2">- Network adapter driver may have issues</sys:String>
+    <sys:String x:Key="Network.Info.PhysicalIssue3">- Physical connection may be faulty</sys:String>
+    <sys:String x:Key="Network.Error.EnableAdapterError">Enable error: {0}</sys:String>
+    <sys:String x:Key="Network.Error.MacNotAvailable">Unavailable</sys:String>
+    <sys:String x:Key="Network.Error.DhcpApplyFailedNetsh">Failed to apply DHCP settings.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;Error detail:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.DnsDhcpApplyFailed">Failed to apply DNS DHCP settings.&#x0A;Adapter: {0}&#x0A;Status: {1}&#x0A;Type: {2}&#x0A;&#x0A;Error detail:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementMissing">System.Management assembly not found. Make sure .NET Runtime is installed correctly.</sys:String>
+    <sys:String x:Key="Network.Error.WmiAdapterNotFound">Adapter configuration '{0}' not found via WMI.</sys:String>
+    <sys:String x:Key="Network.Error.WmiDhcpFailed">Failed to apply DHCP via WMI. Return value: {0}</sys:String>
+    <sys:String x:Key="Network.Error.WmiApplyFailed">Failed to apply DHCP via WMI: {0}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementLoadFailed">Failed to load System.Management assembly. Check .NET Runtime installation.&#x0A;&#x0A;Error: {0}</sys:String>
+    <sys:String x:Key="Network.Error.SystemManagementNotFound">System.Management assembly not found. Reinstall .NET Runtime.&#x0A;&#x0A;Error: {0}</sys:String>
+    <sys:String x:Key="Network.Error.ProcessStartFailed">Failed to start the process.</sys:String>
+    <sys:String x:Key="Network.Error.CommandFailed">Command failed: {0}&#x0A;Exit code: {1}&#x0A;&#x0A;StdErr:&#x0A;{2}&#x0A;&#x0A;StdOut:&#x0A;{3}</sys:String>
+    <sys:String x:Key="Network.Error.CommandFailedWithError">Command failed: {0}&#x0A;&#x0A;Error: {1}</sys:String>
+    <sys:String x:Key="Network.Error.ExitCodeDetail">Exit code: {0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.StdErrorDetail">StdErr:&#x0A;{0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.StdOutDetail">StdOut:&#x0A;{0}&#x0A;</sys:String>
+    <sys:String x:Key="Network.Error.ErrorInfoFailed">Failed to get error info: {0}</sys:String>
+    <sys:String x:Key="Msg.ConfirmDelete">Delete the selected preset?</sys:String>
+    <sys:String x:Key="Msg.ConfirmWireless">You are about to change Wi-Fi settings.&#x0A;This may disconnect the connection.&#x0A;&#x0A;Proceed?</sys:String>
+
+    <sys:String x:Key="Msg.LoadPresetsFailed">Failed to load presets.&#x0A;&#x0A;Error: {0}</sys:String>
+    <sys:String x:Key="Msg.SavePresetsFailed">Failed to save presets.&#x0A;&#x0A;Path: {0}&#x0A;&#x0A;Error: {1}</sys:String>
+    <sys:String x:Key="Msg.OpenNetworkSettingsFailed">Failed to open network settings.&#x0A;&#x0A;Error: {0}</sys:String>
+    <sys:String x:Key="Msg.OpenFolderMissing">The folder could not be found.</sys:String>
+    <sys:String x:Key="Msg.OpenFolderFailed">Failed to open the folder.&#x0A;&#x0A;Error: {0}</sys:String>
+    <sys:String x:Key="Msg.CsvInUseReason">The CSV file is open in another app (Excel). Close it and try again.</sys:String>
+    <sys:String x:Key="Msg.CsvAccessDeniedReason">You don't have permission to write to the application folder.</sys:String>
+    <sys:String x:Key="Msg.LanguageColumnMissing">Language column not found in CSV. Language will default to English. Add a 'Language' column to keep the selection.</sys:String>
+    <sys:String x:Key="Msg.CsvEncodingFallback">CSV could not be read as UTF-8, so it was read as CP932.</sys:String>
+    <sys:String x:Key="Msg.CsvHeaderMissing">CSV header row not found. It will be read using the default column order and saved with a header.</sys:String>
+    <sys:String x:Key="Msg.SettingsRowMissing">Settings row not found. Language will default to English and be saved.</sys:String>
+
+    <sys:String x:Key="Error.Marker.Cause">Cause:</sys:String>
+    <sys:String x:Key="Error.Marker.Fix">Fix:</sys:String>
+
+    <sys:String x:Key="Library.App.Description">Application core</sys:String>
+    <sys:String x:Key="Library.SystemTextJson.Description">JSON serialization/deserialization</sys:String>
+    <sys:String x:Key="Library.SystemManagement.Description">WMI access library</sys:String>
+    <sys:String x:Key="Library.SystemTextEncodingCodePages.Description">Legacy code page support</sys:String>
+    <sys:String x:Key="Library.DotNet.Description">.NET runtime</sys:String>
+    <sys:String x:Key="Library.Wpf.Description">Windows Presentation Foundation</sys:String>
+</ResourceDictionary>
