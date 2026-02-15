@@ -1,4 +1,4 @@
-﻿# NetworkPresetSwitcher
+﻿# Network Preset Switcher
 
 ![Screenshot](ScreenShot/screenshot1.png)
 
@@ -50,7 +50,7 @@ Notes:
 
 ---
 
-# NetworkPresetSwitcher（日本語）
+# Network Preset Switcher（日本語）
 
 ![スクリーンショット](ScreenShot/screenshot1.png)
 
