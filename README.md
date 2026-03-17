@@ -1,5 +1,6 @@
-﻿# Network Preset Switcher
+# Network Preset Switcher
 
+[![.NET CI](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml/badge.svg)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml)
 ![Screenshot](ScreenShot/screenshot1.png)
 
 A WPF app for Windows to switch IP settings using presets.
@@ -15,7 +16,7 @@ A WPF app for Windows to switch IP settings using presets.
 
 ## Build
 ```
-build.bat
+make.bat
 ```
 
 Output:
@@ -48,6 +49,10 @@ Notes:
 ## UI Notes
 - Ping input is initialized with the selected adapter's IPv4 (manual edit is allowed).
 
+## Development
+- **Tests**: Unit tests are located in `NetworkPresetSwitcher.Tests` using xUnit.
+- **CI**: Automated builds, formatting checks, and tests are run via GitHub Actions.
+
 ---
 
 # Network Preset Switcher（日本語）
@@ -67,7 +72,7 @@ Windows で IP アドレス設定をプリセットから切り替える WPF ア
 
 ## ビルド
 ```
-build.bat
+make.bat
 ```
 
 出力先:
@@ -99,3 +104,7 @@ Preset,Name,Group,IP,Subnet,Gateway,DNS1,DNS2,Comment,
 
 ## UI メモ
 - Ping 入力欄は選択中アダプタの IPv4 を初期値にします（手動編集も可）。
+
+## 開発情報
+- **テスト**: xUnit を使用したユニットテストが `NetworkPresetSwitcher.Tests` にあります。
+- **CI**: GitHub Actions により、ビルド、コード整形チェック、テストが自動実行されます。

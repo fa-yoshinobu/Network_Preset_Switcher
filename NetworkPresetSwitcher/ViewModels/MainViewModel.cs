@@ -383,10 +383,10 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var keyword = SearchText.Trim();
-            return preset.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                || preset.Group.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                || preset.IP.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                || preset.Comment.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        return preset.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+            || preset.Group.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+            || preset.IP.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+            || preset.Comment.Contains(keyword, StringComparison.OrdinalIgnoreCase);
     }
 
     private void RefreshAdapters()
@@ -1645,15 +1645,15 @@ public sealed class MainViewModel : ObservableObject
                 continue;
             }
 
-        var preset = new NetworkPreset
-        {
-            Name = SafeGet(row, 0),
-            Group = string.Empty,
-            IP = SafeGet(row, 1),
-            Subnet = SafeGet(row, 2),
-            Gateway = SafeGet(row, 3),
-            DNS1 = SafeGet(row, 4),
-            DNS2 = SafeGet(row, 5),
+            var preset = new NetworkPreset
+            {
+                Name = SafeGet(row, 0),
+                Group = string.Empty,
+                IP = SafeGet(row, 1),
+                Subnet = SafeGet(row, 2),
+                Gateway = SafeGet(row, 3),
+                DNS1 = SafeGet(row, 4),
+                DNS2 = SafeGet(row, 5),
                 Comment = SafeGet(row, 6)
             };
 
