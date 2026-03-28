@@ -15,7 +15,8 @@
 - タイトルとアイコンの縦位置を揃える調整済み
 
 ## ビルド / 配布
-- `release.yml` で self-contained / single-file publish
+- `build.bat` で self-contained / single-file publish
+- `ci.bat` で restore / format / build / test / publish smoke test
 - 出力: `NetworkPresetSwitcher\bin\Release\net8.0-windows\win-x64\publish\NetworkPresetSwitcher.exe`
 - exe アイコン: `AppIcon.ico`
 

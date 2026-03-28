@@ -20,11 +20,16 @@ A WPF app for Windows to switch IP settings using presets.
 
 ## Build
 ```
-dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
+build.bat
 ```
 
 Output:
 `artifacts\publish\NetworkPresetSwitcher.exe`
+
+## CI Check
+```
+ci.bat
+```
 
 ## CSV Format
 Filename: `NetworkPresetSwitcher.csv`
