@@ -1,6 +1,10 @@
 # Network Preset Switcher
 
-[![.NET CI](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml/badge.svg)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/fa-yoshinobu/Network_Preset_Switcher?display_name=tag)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/fa-yoshinobu/Network_Preset_Switcher/ci.yml?branch=main&label=CI)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml)
+[![Auto Release](https://img.shields.io/github/actions/workflow/status/fa-yoshinobu/Network_Preset_Switcher/release.yml?label=Auto%20Release)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/release.yml)
+[![License](https://img.shields.io/github/license/fa-yoshinobu/Network_Preset_Switcher)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/blob/main/LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/8.0)
 ![Screenshot](ScreenShot/screenshot1.png)
 
 A WPF app for Windows to switch IP settings using presets.
@@ -16,11 +20,11 @@ A WPF app for Windows to switch IP settings using presets.
 
 ## Build
 ```
-make.bat
+dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
 ```
 
 Output:
-`NetworkPresetSwitcher\bin\Release\net8.0-windows\win-x64\publish\NetworkPresetSwitcher.exe`
+`artifacts\publish\NetworkPresetSwitcher.exe`
 
 ## CSV Format
 Filename: `NetworkPresetSwitcher.csv`
@@ -72,11 +76,11 @@ Windows で IP アドレス設定をプリセットから切り替える WPF ア
 
 ## ビルド
 ```
-make.bat
+dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
 ```
 
 出力先:
-`NetworkPresetSwitcher\bin\Release\net8.0-windows\win-x64\publish\NetworkPresetSwitcher.exe`
+`artifacts\publish\NetworkPresetSwitcher.exe`
 
 ## CSV 仕様
 保存ファイル名: `NetworkPresetSwitcher.csv`

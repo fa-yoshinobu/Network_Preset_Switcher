@@ -1,32 +1,59 @@
-name: .NET CI
+name: CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main", "master" ]
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
 jobs:
   build:
-
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: NetworkPresetSwitcher/NetworkPresetSwitcher.csproj
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore
+        run: dotnet restore NetworkPresetSwitcher.sln
 
-    - name: Check Format
-      run: dotnet format --verify-no-changes --no-restore
+      - name: Check formatting
+        run: dotnet format NetworkPresetSwitcher.sln --verify-no-changes --no-restore
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Debug
+      - name: Build with analyzers
+        run: dotnet build NetworkPresetSwitcher.sln -c Release --no-restore -p:EnableNETAnalyzers=true -p:AnalysisMode=Minimum -p:AnalysisLevel=latest
 
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - name: Test
+        run: dotnet test NetworkPresetSwitcher.sln -c Release --no-build --verbosity normal
+
+      - name: Publish single-file executable
+        run: dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -o artifacts\publish
+
+      - name: Verify publish output
+        shell: pwsh
+        run: |
+          $exe = "artifacts/publish/NetworkPresetSwitcher.exe"
+          if (-not (Test-Path $exe)) {
+            throw "Single-file executable was not created: $exe"
+          }
+
+          $file = Get-Item $exe
+          $sizeMiB = [math]::Round($file.Length / 1MB, 2)
+          Write-Host "Created $($file.Name) ($sizeMiB MiB)"

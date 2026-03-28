@@ -19,6 +19,9 @@ obj/
 
 # Publish outputs
 **/publish/
+artifacts/
+TestResults/
+*.trx
 
 # Generated docs
 *.tmp
