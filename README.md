@@ -81,11 +81,16 @@ Windows で IP アドレス設定をプリセットから切り替える WPF ア
 
 ## ビルド
 ```
-dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
+build.bat
 ```
 
 出力先:
 `artifacts\publish\NetworkPresetSwitcher.exe`
+
+## CI チェック
+```
+ci.bat
+```
 
 ## CSV 仕様
 保存ファイル名: `NetworkPresetSwitcher.csv`
