@@ -7,7 +7,6 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Globalization;
@@ -234,31 +233,31 @@ public sealed class MainViewModel : ObservableObject
         IsEditing &&
         EditingPreset != null &&
         !EditingPreset.IsDhcp &&
-        !IsValidIpv4(EditingPreset.IP);
+        !Ipv4Validation.IsValidIpv4(EditingPreset.IP);
 
     public bool IsSubnetInvalid =>
         IsEditing &&
         EditingPreset != null &&
         !EditingPreset.IsDhcp &&
-        !IsValidSubnetMask(EditingPreset.Subnet);
+        !Ipv4Validation.IsValidSubnetMask(EditingPreset.Subnet);
 
     public bool IsGatewayInvalid =>
         IsEditing &&
         EditingPreset != null &&
         !EditingPreset.IsDhcp &&
-        !IsValidIpv4Optional(EditingPreset.Gateway);
+        !Ipv4Validation.IsValidIpv4Optional(EditingPreset.Gateway);
 
     public bool IsDns1Invalid =>
         IsEditing &&
         EditingPreset != null &&
         !EditingPreset.IsDhcp &&
-        !IsValidIpv4Optional(EditingPreset.DNS1);
+        !Ipv4Validation.IsValidIpv4Optional(EditingPreset.DNS1);
 
     public bool IsDns2Invalid =>
         IsEditing &&
         EditingPreset != null &&
         !EditingPreset.IsDhcp &&
-        !IsValidIpv4Optional(EditingPreset.DNS2);
+        !Ipv4Validation.IsValidIpv4Optional(EditingPreset.DNS2);
 
     public bool IsErrorVisible
     {
@@ -898,80 +897,37 @@ public sealed class MainViewModel : ObservableObject
             return false;
         }
 
-        if (!preset.IsDhcp && !IsValidIpv4(preset.IP))
+        if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4(preset.IP))
         {
             MessageBox.Show(L("Msg.ErrorInvalidIp"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
-        if (!preset.IsDhcp && !IsValidSubnetMask(preset.Subnet))
+        if (!preset.IsDhcp && !Ipv4Validation.IsValidSubnetMask(preset.Subnet))
         {
             MessageBox.Show(L("Msg.ErrorInvalidSubnet"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
-        if (!preset.IsDhcp && !IsValidIpv4Optional(preset.Gateway))
+        if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.Gateway))
         {
             MessageBox.Show(L("Msg.ErrorInvalidGateway"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
-        if (!preset.IsDhcp && !IsValidIpv4Optional(preset.DNS1))
+        if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.DNS1))
         {
             MessageBox.Show(L("Msg.ErrorInvalidDns1"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
-        if (!preset.IsDhcp && !IsValidIpv4Optional(preset.DNS2))
+        if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.DNS2))
         {
             MessageBox.Show(L("Msg.ErrorInvalidDns2"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         return true;
-    }
-
-    internal static bool IsValidIpv4(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        return IPAddress.TryParse(value.Trim(), out var ip) &&
-               ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork;
-    }
-
-    internal static bool IsValidIpv4Optional(string value)
-    {
-        return string.IsNullOrWhiteSpace(value) || IsValidIpv4(value);
-    }
-
-    internal static bool IsValidSubnetMask(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return true;
-        }
-
-        if (!IPAddress.TryParse(value.Trim(), out var ip) ||
-            ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
-        {
-            return false;
-        }
-
-        var bytes = ip.GetAddressBytes();
-        uint mask = ((uint)bytes[0] << 24) |
-                    ((uint)bytes[1] << 16) |
-                    ((uint)bytes[2] << 8) |
-                    bytes[3];
-
-        if (mask == 0 || mask == uint.MaxValue)
-        {
-            return false;
-        }
-
-        return (mask | (mask - 1)) == uint.MaxValue;
     }
 
     private void LoadPresets()

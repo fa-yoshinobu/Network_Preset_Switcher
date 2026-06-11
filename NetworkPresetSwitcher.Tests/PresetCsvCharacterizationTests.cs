@@ -162,7 +162,7 @@ public class PresetCsvCharacterizationTests
     [InlineData("not-an-ip", false)]
     public void SubnetMaskValidationMatchesCurrentBoundaries(string value, bool expected)
     {
-        Assert.Equal(expected, MainViewModel.IsValidSubnetMask(value));
+        Assert.Equal(expected, Ipv4Validation.IsValidSubnetMask(value));
     }
 
     [Theory]
@@ -172,7 +172,7 @@ public class PresetCsvCharacterizationTests
     [InlineData("not-an-ip", false)]
     public void OptionalIpv4ValidationAllowsBlankOnly(string value, bool expected)
     {
-        Assert.Equal(expected, MainViewModel.IsValidIpv4Optional(value));
+        Assert.Equal(expected, Ipv4Validation.IsValidIpv4Optional(value));
     }
 
     [Fact]
