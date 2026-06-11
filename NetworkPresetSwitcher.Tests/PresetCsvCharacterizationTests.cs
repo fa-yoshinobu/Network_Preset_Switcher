@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using NetworkPresetSwitcher.Models;
+using NetworkPresetSwitcher.Services;
 using NetworkPresetSwitcher.ViewModels;
 using Xunit;
 
@@ -49,14 +50,14 @@ public class PresetCsvCharacterizationTests
         {
             var lines = new[]
             {
-                MainViewModel.ToCsvLine(CsvHeader),
-                MainViewModel.ToCsvLine(RoundTripPreset)
+                PresetCsvFormat.ToCsvLine(CsvHeader),
+                PresetCsvFormat.ToCsvLine(RoundTripPreset)
             };
             File.WriteAllText(path, string.Join("\r\n", lines) + "\r\n", new UTF8Encoding(true));
 
-            var rows = MainViewModel.ReadCsvRows(path, out var encodingMode);
+            var rows = PresetCsvFormat.ReadCsvRows(path, out var encodingMode);
 
-            Assert.Equal(MainViewModel.CsvEncodingMode.Utf8Bom, encodingMode);
+            Assert.Equal(CsvEncodingMode.Utf8Bom, encodingMode);
             Assert.Equal("Office, A", rows[1][1]);
             Assert.Equal("Memo \"quoted\"\nnext", rows[1][8]);
         }
@@ -76,9 +77,9 @@ public class PresetCsvCharacterizationTests
             var contents = string.Join("\r\n", Cp932CsvLines) + "\r\n";
             File.WriteAllBytes(path, cp932.GetBytes(contents));
 
-            var rows = MainViewModel.ReadCsvRows(path, out var encodingMode);
+            var rows = PresetCsvFormat.ReadCsvRows(path, out var encodingMode);
 
-            Assert.Equal(MainViewModel.CsvEncodingMode.Cp932Fallback, encodingMode);
+            Assert.Equal(CsvEncodingMode.Cp932Fallback, encodingMode);
             Assert.Equal("現場", rows[1][1]);
             Assert.Equal("メモ", rows[1][8]);
         }
@@ -93,7 +94,7 @@ public class PresetCsvCharacterizationTests
     {
         const string text = "Type\tName\tIP\r\nPreset\t\"Name\tInside\"\t192.168.1.10\r\n";
 
-        var normalized = MainViewModel.NormalizeCsvDelimiters(text);
+        var normalized = PresetCsvFormat.NormalizeCsvDelimiters(text);
 
         Assert.StartsWith("Type,Name,IP", normalized, StringComparison.Ordinal);
         Assert.Contains("\"Name\tInside\"", normalized, StringComparison.Ordinal);
@@ -109,9 +110,9 @@ public class PresetCsvCharacterizationTests
             "primary dns", "secondary dns", "memo", "lang"
         };
 
-        var map = MainViewModel.BuildHeaderMap(header);
+        var map = PresetCsvFormat.BuildHeaderMap(header);
 
-        Assert.True(MainViewModel.LooksLikeHeader(header));
+        Assert.True(PresetCsvFormat.LooksLikeHeader(header));
         Assert.Equal(0, map["Name"]);
         Assert.Equal(1, map["Group"]);
         Assert.Equal(2, map["IP"]);
@@ -121,7 +122,7 @@ public class PresetCsvCharacterizationTests
         Assert.Equal(6, map["DNS2"]);
         Assert.Equal(7, map["Comment"]);
         Assert.Equal(8, map["Language"]);
-        Assert.Equal("ipaddress", MainViewModel.NormalizeHeaderKey("IP Address"));
+        Assert.Equal("ipaddress", PresetCsvFormat.NormalizeHeaderKey("IP Address"));
     }
 
     [Fact]

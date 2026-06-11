@@ -18,6 +18,7 @@ using AppLocalization = NetworkPresetSwitcher.Infrastructure.Localization;
 using NetworkPresetSwitcher.Converters;
 using NetworkPresetSwitcher.Infrastructure;
 using NetworkPresetSwitcher.Models;
+using NetworkPresetSwitcher.Services;
 
 namespace NetworkPresetSwitcher.ViewModels;
 
@@ -985,7 +986,7 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
-            var rows = ReadCsvRows(presetsPath, out var encodingMode);
+            var rows = PresetCsvFormat.ReadCsvRows(presetsPath, out var encodingMode);
             Presets.Clear();
 
             var language = string.Empty;
@@ -999,9 +1000,9 @@ public sealed class MainViewModel : ObservableObject
                 ShowEncodingFallbackWarning();
             }
 
-            if (rows.Count > 0 && LooksLikeHeader(rows[0]))
+            if (rows.Count > 0 && PresetCsvFormat.LooksLikeHeader(rows[0]))
             {
-                headerMap = BuildHeaderMap(rows[0]);
+                headerMap = PresetCsvFormat.BuildHeaderMap(rows[0]);
                 startIndex = 1;
                 if (!headerMap.ContainsKey("Language"))
                 {
@@ -1015,7 +1016,7 @@ public sealed class MainViewModel : ObservableObject
                 needsRewrite = true;
 
                 var firstData = rows.FirstOrDefault(r => r.Any(value => !string.IsNullOrWhiteSpace(value)));
-                if (firstData != null && IsTypeRow(SafeGet(firstData, 0)))
+                if (firstData != null && PresetCsvFormat.IsTypeRow(PresetCsvFormat.SafeGet(firstData, 0)))
                 {
                     headerMap = DefaultCsvMap;
                     startIndex = 0;
@@ -1074,8 +1075,8 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             var builder = new StringBuilder();
-            builder.AppendLine(ToCsvLine(CsvHeader));
-            builder.AppendLine(ToCsvLine(new[]
+            builder.AppendLine(PresetCsvFormat.ToCsvLine(CsvHeader));
+            builder.AppendLine(PresetCsvFormat.ToCsvLine(new[]
             {
                 PresetTypeSettings,
                 string.Empty,
@@ -1091,7 +1092,7 @@ public sealed class MainViewModel : ObservableObject
 
             foreach (var preset in Presets)
             {
-                builder.AppendLine(ToCsvLine(new[]
+                builder.AppendLine(PresetCsvFormat.ToCsvLine(new[]
                 {
                     PresetTypePreset,
                     preset.Name,
@@ -1192,274 +1193,13 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    internal static List<string[]> ReadCsvRows(string path, out CsvEncodingMode encodingMode)
-    {
-        var text = ReadCsvTextWithFallback(path, out encodingMode);
-        text = NormalizeCsvDelimiters(text);
-        var rows = new List<string[]>();
-        var row = new List<string>();
-        var field = new StringBuilder();
-        var inQuotes = false;
-
-        for (var i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-
-            if (inQuotes)
-            {
-                if (c == '"')
-                {
-                    if (i + 1 < text.Length && text[i + 1] == '"')
-                    {
-                        field.Append('"');
-                        i++;
-                    }
-                    else
-                    {
-                        inQuotes = false;
-                    }
-                }
-                else
-                {
-                    field.Append(c);
-                }
-
-                continue;
-            }
-
-            if (c == '"')
-            {
-                inQuotes = true;
-                continue;
-            }
-
-            if (c == ',')
-            {
-                row.Add(field.ToString());
-                field.Clear();
-                continue;
-            }
-
-            if (c == '\r' || c == '\n')
-            {
-                row.Add(field.ToString());
-                field.Clear();
-
-                if (row.Any(r => !string.IsNullOrWhiteSpace(r)))
-                {
-                    rows.Add(row.ToArray());
-                }
-
-                row = new List<string>();
-
-                if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n')
-                {
-                    i++;
-                }
-
-                continue;
-            }
-
-            field.Append(c);
-        }
-
-        row.Add(field.ToString());
-        if (row.Any(r => !string.IsNullOrWhiteSpace(r)))
-        {
-            rows.Add(row.ToArray());
-        }
-
-        return rows;
-    }
-
-    internal static string NormalizeCsvDelimiters(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return text;
-        }
-
-        var firstLineEnd = text.IndexOfAny(new[] { '\r', '\n' });
-        var firstLine = firstLineEnd >= 0 ? text[..firstLineEnd] : text;
-        if (firstLine.IndexOf('\t') >= 0 && firstLine.IndexOf(',') < 0)
-        {
-            return ReplaceTabsOutsideQuotes(text);
-        }
-
-        return text;
-    }
-
-    internal static string ReplaceTabsOutsideQuotes(string text)
-    {
-        var builder = new StringBuilder(text.Length);
-        var inQuotes = false;
-        for (var i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-            if (c == '"')
-            {
-                if (inQuotes && i + 1 < text.Length && text[i + 1] == '"')
-                {
-                    builder.Append(c);
-                    builder.Append(text[i + 1]);
-                    i++;
-                    continue;
-                }
-
-                inQuotes = !inQuotes;
-                builder.Append(c);
-                continue;
-            }
-
-            if (c == '\t' && !inQuotes)
-            {
-                builder.Append(',');
-                continue;
-            }
-
-            builder.Append(c);
-        }
-
-        return builder.ToString();
-    }
-
-    internal static string ReadCsvTextWithFallback(string path, out CsvEncodingMode encodingMode)
-    {
-        var bytes = File.ReadAllBytes(path);
-        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
-        {
-            encodingMode = CsvEncodingMode.Utf8Bom;
-            return Encoding.UTF8.GetString(bytes);
-        }
-
-        try
-        {
-            var utf8 = new UTF8Encoding(false, true);
-            encodingMode = CsvEncodingMode.Utf8;
-            return utf8.GetString(bytes);
-        }
-        catch (DecoderFallbackException)
-        {
-        }
-
-        encodingMode = CsvEncodingMode.Cp932Fallback;
-        var cp932 = Encoding.GetEncoding(932);
-        return cp932.GetString(bytes);
-    }
-
-    internal static bool LooksLikeHeader(string[] row)
-    {
-        if (row.Length == 0)
-        {
-            return false;
-        }
-
-        var set = row.Select(value => MapHeaderKey(TrimBom(value).Trim()))
-            .Where(value => !string.IsNullOrEmpty(value))
-            .Select(value => value!)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        if (set.Count == 0)
-        {
-            return false;
-        }
-
-        return (set.Contains("Type") || set.Contains("Name")) &&
-               (set.Contains("IP") || set.Contains("Subnet") || set.Contains("DNS1") || set.Contains("DNS2"));
-    }
-
-    internal static Dictionary<string, int> BuildHeaderMap(string[] row)
-    {
-        var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (var i = 0; i < row.Length; i++)
-        {
-            var key = MapHeaderKey(TrimBom(row[i]).Trim());
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                continue;
-            }
-
-            if (!map.ContainsKey(key))
-            {
-                map[key] = i;
-            }
-        }
-
-        return map;
-    }
-
-    internal static string? MapHeaderKey(string key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return null;
-        }
-
-        var normalized = NormalizeHeaderKey(key);
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return null;
-        }
-
-        return normalized switch
-        {
-            "type" => "Type",
-            "name" => "Name",
-            "presetname" => "Name",
-            "profile" => "Name",
-            "profilename" => "Name",
-            "group" => "Group",
-            "category" => "Group",
-            "folder" => "Group",
-            "section" => "Group",
-            "ip" => "IP",
-            "ipaddress" => "IP",
-            "ipaddr" => "IP",
-            "subnet" => "Subnet",
-            "subnetmask" => "Subnet",
-            "mask" => "Subnet",
-            "gateway" => "Gateway",
-            "defaultgateway" => "Gateway",
-            "gw" => "Gateway",
-            "dns1" => "DNS1",
-            "dnsprimary" => "DNS1",
-            "primarydns" => "DNS1",
-            "dnsserver1" => "DNS1",
-            "dns2" => "DNS2",
-            "dnssecondary" => "DNS2",
-            "secondarydns" => "DNS2",
-            "dnsserver2" => "DNS2",
-            "comment" => "Comment",
-            "memo" => "Comment",
-            "note" => "Comment",
-            "remarks" => "Comment",
-            "language" => "Language",
-            "lang" => "Language",
-            _ => null
-        };
-    }
-
-    internal static string NormalizeHeaderKey(string value)
-    {
-        var builder = new StringBuilder(value.Length);
-        foreach (var c in value)
-        {
-            if (char.IsLetterOrDigit(c))
-            {
-                builder.Append(char.ToLowerInvariant(c));
-            }
-        }
-
-        return builder.ToString();
-    }
-
     private void ParseTypedRow(string[] row, Dictionary<string, int> map, ref string language, ref bool foundSettings)
     {
-        var type = GetFieldTrimmed(row, map, "Type");
+        var type = PresetCsvFormat.GetFieldTrimmed(row, map, "Type");
         if (string.Equals(type, PresetTypeSettings, StringComparison.OrdinalIgnoreCase))
         {
             foundSettings = true;
-            var lang = GetFieldTrimmed(row, map, "Language");
+            var lang = PresetCsvFormat.GetFieldTrimmed(row, map, "Language");
             if (!string.IsNullOrWhiteSpace(lang))
             {
                 language = lang;
@@ -1476,14 +1216,14 @@ public sealed class MainViewModel : ObservableObject
 
         var preset = new NetworkPreset
         {
-            Name = GetField(row, map, "Name"),
-            Group = GetField(row, map, "Group"),
-            IP = GetField(row, map, "IP"),
-            Subnet = GetField(row, map, "Subnet"),
-            Gateway = GetField(row, map, "Gateway"),
-            DNS1 = GetField(row, map, "DNS1"),
-            DNS2 = GetField(row, map, "DNS2"),
-            Comment = GetField(row, map, "Comment")
+            Name = PresetCsvFormat.GetField(row, map, "Name"),
+            Group = PresetCsvFormat.GetField(row, map, "Group"),
+            IP = PresetCsvFormat.GetField(row, map, "IP"),
+            Subnet = PresetCsvFormat.GetField(row, map, "Subnet"),
+            Gateway = PresetCsvFormat.GetField(row, map, "Gateway"),
+            DNS1 = PresetCsvFormat.GetField(row, map, "DNS1"),
+            DNS2 = PresetCsvFormat.GetField(row, map, "DNS2"),
+            Comment = PresetCsvFormat.GetField(row, map, "Comment")
         };
 
         if (!string.IsNullOrWhiteSpace(preset.Name) ||
@@ -1497,48 +1237,6 @@ public sealed class MainViewModel : ObservableObject
         {
             Presets.Add(preset);
         }
-    }
-
-    internal static string GetField(string[] row, Dictionary<string, int> map, string key)
-    {
-        if (map.TryGetValue(key, out var index) && index >= 0 && index < row.Length)
-        {
-            return TrimBom(row[index]);
-        }
-
-        return string.Empty;
-    }
-
-    internal static string GetFieldTrimmed(string[] row, Dictionary<string, int> map, string key)
-    {
-        return GetField(row, map, key).Trim();
-    }
-
-    internal static string ToCsvLine(IEnumerable<string> fields)
-    {
-        return string.Join(",", fields.Select(EscapeCsv));
-    }
-
-    internal static string EscapeCsv(string value)
-    {
-        if (value == null)
-        {
-            return string.Empty;
-        }
-
-        var needsQuote = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
-        var sanitized = value.Replace("\"", "\"\"");
-        return needsQuote ? $"\"{sanitized}\"" : sanitized;
-    }
-
-    internal static string TrimBom(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        return value[0] == '\uFEFF' ? value.TrimStart('\uFEFF') : value;
     }
 
     private string GetSaveFailureReason(Exception? error)
@@ -1623,19 +1321,6 @@ public sealed class MainViewModel : ObservableObject
         AddActivity(new ActivityItem(L("Msg.WarningTitle"), L("Msg.CsvEncodingFallback"), ActivityLevel.Warning));
     }
 
-    internal enum CsvEncodingMode
-    {
-        Utf8Bom,
-        Utf8,
-        Cp932Fallback
-    }
-
-    internal static bool IsTypeRow(string typeCandidate)
-    {
-        return string.Equals(typeCandidate, PresetTypePreset, StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(typeCandidate, PresetTypeSettings, StringComparison.OrdinalIgnoreCase);
-    }
-
     private void ParseLegacyRows(IEnumerable<string[]> rows)
     {
         foreach (var row in rows)
@@ -1647,14 +1332,14 @@ public sealed class MainViewModel : ObservableObject
 
             var preset = new NetworkPreset
             {
-                Name = SafeGet(row, 0),
+                Name = PresetCsvFormat.SafeGet(row, 0),
                 Group = string.Empty,
-                IP = SafeGet(row, 1),
-                Subnet = SafeGet(row, 2),
-                Gateway = SafeGet(row, 3),
-                DNS1 = SafeGet(row, 4),
-                DNS2 = SafeGet(row, 5),
-                Comment = SafeGet(row, 6)
+                IP = PresetCsvFormat.SafeGet(row, 1),
+                Subnet = PresetCsvFormat.SafeGet(row, 2),
+                Gateway = PresetCsvFormat.SafeGet(row, 3),
+                DNS1 = PresetCsvFormat.SafeGet(row, 4),
+                DNS2 = PresetCsvFormat.SafeGet(row, 5),
+                Comment = PresetCsvFormat.SafeGet(row, 6)
             };
 
             if (string.IsNullOrWhiteSpace(preset.Name) &&
@@ -1670,16 +1355,6 @@ public sealed class MainViewModel : ObservableObject
 
             Presets.Add(preset);
         }
-    }
-
-    internal static string SafeGet(string[] row, int index)
-    {
-        if (index < 0 || index >= row.Length)
-        {
-            return string.Empty;
-        }
-
-        return TrimBom(row[index]);
     }
 
     private void OpenNetworkConnections()
