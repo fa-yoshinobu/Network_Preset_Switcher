@@ -187,7 +187,7 @@ public class PresetCsvCharacterizationTests
             new NetworkPreset { Group = "Admin", Name = "Preset 99" }
         };
 
-        items.Sort(new MainViewModel.PresetNaturalComparer());
+        items.Sort(new PresetNaturalComparer());
 
         Assert.Collection(
             items.Cast<NetworkPreset>(),
