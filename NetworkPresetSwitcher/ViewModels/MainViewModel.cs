@@ -930,7 +930,7 @@ public sealed class MainViewModel : ObservableObject
         return true;
     }
 
-    private static bool IsValidIpv4(string value)
+    internal static bool IsValidIpv4(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -941,12 +941,12 @@ public sealed class MainViewModel : ObservableObject
                ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork;
     }
 
-    private static bool IsValidIpv4Optional(string value)
+    internal static bool IsValidIpv4Optional(string value)
     {
         return string.IsNullOrWhiteSpace(value) || IsValidIpv4(value);
     }
 
-    private static bool IsValidSubnetMask(string value)
+    internal static bool IsValidSubnetMask(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -1192,7 +1192,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private static List<string[]> ReadCsvRows(string path, out CsvEncodingMode encodingMode)
+    internal static List<string[]> ReadCsvRows(string path, out CsvEncodingMode encodingMode)
     {
         var text = ReadCsvTextWithFallback(path, out encodingMode);
         text = NormalizeCsvDelimiters(text);
@@ -1272,7 +1272,7 @@ public sealed class MainViewModel : ObservableObject
         return rows;
     }
 
-    private static string NormalizeCsvDelimiters(string text)
+    internal static string NormalizeCsvDelimiters(string text)
     {
         if (string.IsNullOrEmpty(text))
         {
@@ -1289,7 +1289,7 @@ public sealed class MainViewModel : ObservableObject
         return text;
     }
 
-    private static string ReplaceTabsOutsideQuotes(string text)
+    internal static string ReplaceTabsOutsideQuotes(string text)
     {
         var builder = new StringBuilder(text.Length);
         var inQuotes = false;
@@ -1323,7 +1323,7 @@ public sealed class MainViewModel : ObservableObject
         return builder.ToString();
     }
 
-    private static string ReadCsvTextWithFallback(string path, out CsvEncodingMode encodingMode)
+    internal static string ReadCsvTextWithFallback(string path, out CsvEncodingMode encodingMode)
     {
         var bytes = File.ReadAllBytes(path);
         if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
@@ -1347,7 +1347,7 @@ public sealed class MainViewModel : ObservableObject
         return cp932.GetString(bytes);
     }
 
-    private static bool LooksLikeHeader(string[] row)
+    internal static bool LooksLikeHeader(string[] row)
     {
         if (row.Length == 0)
         {
@@ -1368,7 +1368,7 @@ public sealed class MainViewModel : ObservableObject
                (set.Contains("IP") || set.Contains("Subnet") || set.Contains("DNS1") || set.Contains("DNS2"));
     }
 
-    private static Dictionary<string, int> BuildHeaderMap(string[] row)
+    internal static Dictionary<string, int> BuildHeaderMap(string[] row)
     {
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         for (var i = 0; i < row.Length; i++)
@@ -1388,7 +1388,7 @@ public sealed class MainViewModel : ObservableObject
         return map;
     }
 
-    private static string? MapHeaderKey(string key)
+    internal static string? MapHeaderKey(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -1439,7 +1439,7 @@ public sealed class MainViewModel : ObservableObject
         };
     }
 
-    private static string NormalizeHeaderKey(string value)
+    internal static string NormalizeHeaderKey(string value)
     {
         var builder = new StringBuilder(value.Length);
         foreach (var c in value)
@@ -1499,7 +1499,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private static string GetField(string[] row, Dictionary<string, int> map, string key)
+    internal static string GetField(string[] row, Dictionary<string, int> map, string key)
     {
         if (map.TryGetValue(key, out var index) && index >= 0 && index < row.Length)
         {
@@ -1509,17 +1509,17 @@ public sealed class MainViewModel : ObservableObject
         return string.Empty;
     }
 
-    private static string GetFieldTrimmed(string[] row, Dictionary<string, int> map, string key)
+    internal static string GetFieldTrimmed(string[] row, Dictionary<string, int> map, string key)
     {
         return GetField(row, map, key).Trim();
     }
 
-    private static string ToCsvLine(IEnumerable<string> fields)
+    internal static string ToCsvLine(IEnumerable<string> fields)
     {
         return string.Join(",", fields.Select(EscapeCsv));
     }
 
-    private static string EscapeCsv(string value)
+    internal static string EscapeCsv(string value)
     {
         if (value == null)
         {
@@ -1531,7 +1531,7 @@ public sealed class MainViewModel : ObservableObject
         return needsQuote ? $"\"{sanitized}\"" : sanitized;
     }
 
-    private static string TrimBom(string value)
+    internal static string TrimBom(string value)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -1623,14 +1623,14 @@ public sealed class MainViewModel : ObservableObject
         AddActivity(new ActivityItem(L("Msg.WarningTitle"), L("Msg.CsvEncodingFallback"), ActivityLevel.Warning));
     }
 
-    private enum CsvEncodingMode
+    internal enum CsvEncodingMode
     {
         Utf8Bom,
         Utf8,
         Cp932Fallback
     }
 
-    private static bool IsTypeRow(string typeCandidate)
+    internal static bool IsTypeRow(string typeCandidate)
     {
         return string.Equals(typeCandidate, PresetTypePreset, StringComparison.OrdinalIgnoreCase) ||
                string.Equals(typeCandidate, PresetTypeSettings, StringComparison.OrdinalIgnoreCase);
@@ -1672,7 +1672,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private static string SafeGet(string[] row, int index)
+    internal static string SafeGet(string[] row, int index)
     {
         if (index < 0 || index >= row.Length)
         {
@@ -1748,7 +1748,7 @@ public sealed class MainViewModel : ObservableObject
         OpenPresetsFolderCommand.RaiseCanExecuteChanged();
     }
 
-    private sealed class PresetNaturalComparer : IComparer
+    internal sealed class PresetNaturalComparer : IComparer
     {
         public int Compare(object? x, object? y)
         {
