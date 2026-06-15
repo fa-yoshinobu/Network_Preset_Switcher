@@ -1,25 +1,34 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading.Tasks;
 using NetworkPresetSwitcher.Infrastructure;
 
 namespace NetworkPresetSwitcher.Models;
 
 public static class NetworkManager
 {
+    private static readonly TimeSpan AdapterEnableDelay = TimeSpan.FromSeconds(2);
+
     private static string L(string key) => Localization.T(key);
     private static string LF(string key, params object[] args) => Localization.Format(key, args);
 
     public static void ApplyPreset(NetworkInterface adapter, NetworkPreset preset)
     {
+        ApplyPresetAsync(adapter, preset).GetAwaiter().GetResult();
+    }
+
+    public static async Task ApplyPresetAsync(NetworkInterface adapter, NetworkPreset preset)
+    {
         if (!IsAdministrator())
         {
             var errorMsg = L("Network.Error.AdminRequired");
-            throw new Exception(errorMsg);
+            throw CreateApplyException(errorMsg);
         }
 
         if (adapter.OperationalStatus != OperationalStatus.Up)
@@ -28,8 +37,8 @@ public static class NetworkManager
             {
                 try
                 {
-                    EnableAdapter(adapter);
-                    System.Threading.Thread.Sleep(2000);
+                    await EnableAdapterAsync(adapter).ConfigureAwait(false);
+                    await Task.Delay(AdapterEnableDelay).ConfigureAwait(false);
 
                     var refreshedAdapter = GetRefreshedAdapter(adapter.Name);
                     if (refreshedAdapter != null && refreshedAdapter.OperationalStatus == OperationalStatus.Up)
@@ -39,19 +48,19 @@ public static class NetworkManager
                     else
                     {
                         var errorMsg = LF("Network.Error.EnableAdapterFailed", adapter.Name, adapter.OperationalStatus);
-                        throw new Exception(errorMsg);
+                        throw CreateApplyException(errorMsg);
                     }
                 }
                 catch (Exception enableException)
                 {
                     var errorMsg = LF("Network.Error.EnableAdapterFailedWithError", adapter.Name, adapter.OperationalStatus, enableException.Message);
-                    throw new Exception(errorMsg);
+                    throw CreateApplyException(errorMsg, enableException);
                 }
             }
             else
             {
                 var errorMsg = LF("Network.Error.AdapterNotUp", adapter.Name, adapter.OperationalStatus);
-                throw new Exception(errorMsg);
+                throw CreateApplyException(errorMsg);
             }
         }
 
@@ -59,13 +68,13 @@ public static class NetworkManager
         {
             try
             {
-                ApplyDhcpWithNetsh(adapter);
+                await ApplyDhcpWithNetshAsync(adapter).ConfigureAwait(false);
             }
             catch (Exception netshException)
             {
                 try
                 {
-                    ApplyDhcpWithWmi(adapter);
+                    await Task.Run(() => ApplyDhcpWithWmi(adapter)).ConfigureAwait(false);
                 }
                 catch (Exception wmiException)
                 {
@@ -75,39 +84,39 @@ public static class NetworkManager
                     }
 
                     var errorMsg = LF("Network.Error.DhcpApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, netshException.Message, wmiException.Message);
-                    throw new Exception(errorMsg);
+                    throw CreateApplyException(errorMsg, wmiException);
                 }
             }
         }
         else
         {
-            var result = RunNetshCommand($"interface ip set address \"{adapter.Name}\" static {preset.IP} {preset.Subnet} {preset.Gateway}");
+            var result = await RunNetshCommandAsync(CreateSetStaticAddressCommand(adapter.Name, preset.IP, preset.Subnet, preset.Gateway)).ConfigureAwait(false);
             if (result != 0)
             {
-                var detailedError = GetDetailedNetshError($"interface ip set address \"{adapter.Name}\" static {preset.IP} {preset.Subnet} {preset.Gateway}");
+                var detailedError = await GetDetailedNetshErrorAsync(CreateSetStaticAddressCommand(adapter.Name, preset.IP, preset.Subnet, preset.Gateway)).ConfigureAwait(false);
                 var errorMsg = LF("Network.Error.StaticIpApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError);
-                throw new Exception(errorMsg);
+                throw CreateApplyException(errorMsg);
             }
 
             if (!string.IsNullOrEmpty(preset.DNS1))
             {
-                result = RunNetshCommand($"interface ip set dns \"{adapter.Name}\" static {preset.DNS1}");
+                result = await RunNetshCommandAsync(CreateSetStaticDnsCommand(adapter.Name, preset.DNS1)).ConfigureAwait(false);
                 if (result != 0)
                 {
-                    var detailedError = GetDetailedNetshError($"interface ip set dns \"{adapter.Name}\" static {preset.DNS1}");
+                    var detailedError = await GetDetailedNetshErrorAsync(CreateSetStaticDnsCommand(adapter.Name, preset.DNS1)).ConfigureAwait(false);
                     var errorMsg = LF("Network.Error.Dns1ApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError);
-                    throw new Exception(errorMsg);
+                    throw CreateApplyException(errorMsg);
                 }
             }
 
             if (!string.IsNullOrEmpty(preset.DNS2))
             {
-                result = RunNetshCommand($"interface ip add dns \"{adapter.Name}\" {preset.DNS2} index=2");
+                result = await RunNetshCommandAsync(CreateAddDnsCommand(adapter.Name, preset.DNS2)).ConfigureAwait(false);
                 if (result != 0)
                 {
-                    var detailedError = GetDetailedNetshError($"interface ip add dns \"{adapter.Name}\" {preset.DNS2} index=2");
+                    var detailedError = await GetDetailedNetshErrorAsync(CreateAddDnsCommand(adapter.Name, preset.DNS2)).ConfigureAwait(false);
                     var errorMsg = LF("Network.Error.Dns2ApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError);
-                    throw new Exception(errorMsg);
+                    throw CreateApplyException(errorMsg);
                 }
             }
         }
@@ -134,13 +143,61 @@ public static class NetworkManager
         return info.ToString();
     }
 
-    private static void EnableAdapter(NetworkInterface adapter)
+    internal static NetshCommand CreateSetInterfaceEnabledCommand(string adapterName)
     {
-        var result = RunNetshCommand($"interface set interface \"{adapter.Name}\" admin=enable");
+        return new NetshCommand("interface", "set", "interface", adapterName, "admin=enable");
+    }
+
+    internal static NetshCommand CreateSetStaticAddressCommand(string adapterName, string ip, string subnet, string gateway)
+    {
+        var arguments = new List<string>
+        {
+            "interface",
+            "ip",
+            "set",
+            "address",
+            adapterName,
+            "static",
+            ip,
+            subnet
+        };
+
+        if (!string.IsNullOrWhiteSpace(gateway))
+        {
+            arguments.Add(gateway);
+        }
+
+        return new NetshCommand(arguments);
+    }
+
+    internal static NetshCommand CreateSetDhcpAddressCommand(string adapterName)
+    {
+        return new NetshCommand("interface", "ip", "set", "address", adapterName, "dhcp");
+    }
+
+    internal static NetshCommand CreateSetStaticDnsCommand(string adapterName, string dns)
+    {
+        return new NetshCommand("interface", "ip", "set", "dns", adapterName, "static", dns);
+    }
+
+    internal static NetshCommand CreateSetDhcpDnsCommand(string adapterName)
+    {
+        return new NetshCommand("interface", "ip", "set", "dns", adapterName, "dhcp");
+    }
+
+    internal static NetshCommand CreateAddDnsCommand(string adapterName, string dns)
+    {
+        return new NetshCommand("interface", "ip", "add", "dns", adapterName, dns, "index=2");
+    }
+
+    private static async Task EnableAdapterAsync(NetworkInterface adapter)
+    {
+        var command = CreateSetInterfaceEnabledCommand(adapter.Name);
+        var result = await RunNetshCommandAsync(command).ConfigureAwait(false);
         if (result != 0)
         {
-            var detailedError = GetDetailedNetshError($"interface set interface \"{adapter.Name}\" admin=enable");
-            throw new Exception(LF("Network.Error.EnableAdapterError", detailedError));
+            var detailedError = await GetDetailedNetshErrorAsync(command).ConfigureAwait(false);
+            throw CreateApplyException(LF("Network.Error.EnableAdapterError", detailedError));
         }
     }
 
@@ -178,28 +235,30 @@ public static class NetworkManager
         }
     }
 
-    private static void ApplyDhcpWithNetsh(NetworkInterface adapter)
+    private static async Task ApplyDhcpWithNetshAsync(NetworkInterface adapter)
     {
-        var result = RunNetshCommand($"interface ip set address \"{adapter.Name}\" dhcp");
+        var addressCommand = CreateSetDhcpAddressCommand(adapter.Name);
+        var result = await RunNetshCommandAsync(addressCommand).ConfigureAwait(false);
         if (result != 0)
         {
-            var detailedError = GetDetailedNetshError($"interface ip set address \"{adapter.Name}\" dhcp");
+            var detailedError = await GetDetailedNetshErrorAsync(addressCommand).ConfigureAwait(false);
             if (detailedError.Contains("DHCP is already enabled", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
-            throw new Exception(LF("Network.Error.DhcpApplyFailedNetsh", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError));
+            throw CreateApplyException(LF("Network.Error.DhcpApplyFailedNetsh", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError));
         }
 
-        result = RunNetshCommand($"interface ip set dns \"{adapter.Name}\" dhcp");
+        var dnsCommand = CreateSetDhcpDnsCommand(adapter.Name);
+        result = await RunNetshCommandAsync(dnsCommand).ConfigureAwait(false);
         if (result != 0)
         {
-            var detailedError = GetDetailedNetshError($"interface ip set dns \"{adapter.Name}\" dhcp");
+            var detailedError = await GetDetailedNetshErrorAsync(dnsCommand).ConfigureAwait(false);
             if (detailedError.Contains("DHCP is already enabled", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
-            throw new Exception(LF("Network.Error.DnsDhcpApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError));
+            throw CreateApplyException(LF("Network.Error.DnsDhcpApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, detailedError));
         }
     }
 
@@ -210,7 +269,7 @@ public static class NetworkManager
             var managementAssembly = typeof(ManagementScope).Assembly;
             if (managementAssembly == null)
             {
-                throw new Exception(L("Network.Error.SystemManagementMissing"));
+                throw CreateApplyException(L("Network.Error.SystemManagementMissing"));
             }
 
             var scope = new ManagementScope("root\\cimv2");
@@ -222,7 +281,7 @@ public static class NetworkManager
                 var configurations = searcher.Get();
                 if (configurations.Count == 0)
                 {
-                    throw new Exception(LF("Network.Error.WmiAdapterNotFound", adapter.Description));
+                    throw CreateApplyException(LF("Network.Error.WmiAdapterNotFound", adapter.Description));
                 }
 
                 foreach (ManagementObject configObj in configurations)
@@ -235,7 +294,7 @@ public static class NetworkManager
                         var returnValue = Convert.ToInt32(outParams["ReturnValue"]);
                         if (returnValue != 0)
                         {
-                            throw new Exception(LF("Network.Error.WmiDhcpFailed", returnValue));
+                            throw CreateApplyException(LF("Network.Error.WmiDhcpFailed", returnValue));
                         }
                     }
                 }
@@ -243,19 +302,19 @@ public static class NetworkManager
         }
         catch (ManagementException ex)
         {
-            throw new Exception(LF("Network.Error.WmiApplyFailed", ex.Message));
+            throw CreateApplyException(LF("Network.Error.WmiApplyFailed", ex.Message), ex);
         }
         catch (System.Reflection.ReflectionTypeLoadException ex)
         {
-            throw new Exception(LF("Network.Error.SystemManagementLoadFailed", ex.Message));
+            throw CreateApplyException(LF("Network.Error.SystemManagementLoadFailed", ex.Message), ex);
         }
         catch (FileNotFoundException ex)
         {
-            throw new Exception(LF("Network.Error.SystemManagementNotFound", ex.Message));
+            throw CreateApplyException(LF("Network.Error.SystemManagementNotFound", ex.Message), ex);
         }
         catch (Exception ex)
         {
-            throw new Exception(LF("Network.Error.WmiApplyFailed", ex.Message));
+            throw CreateApplyException(LF("Network.Error.WmiApplyFailed", ex.Message), ex);
         }
     }
 
@@ -268,34 +327,24 @@ public static class NetworkManager
         }
     }
 
-    private static int RunNetshCommand(string command)
+    private static async Task<int> RunNetshCommandAsync(NetshCommand command)
     {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "netsh",
-            Arguments = command,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
-        };
-
         try
         {
-            using (var process = Process.Start(startInfo))
+            using (var process = Process.Start(command.CreateStartInfo()))
             {
                 if (process == null)
                 {
-                    throw new Exception(L("Network.Error.ProcessStartFailed"));
+                    throw CreateApplyException(L("Network.Error.ProcessStartFailed"));
                 }
 
-                process.WaitForExit();
+                var errorTask = process.StandardError.ReadToEndAsync();
+                var outputTask = process.StandardOutput.ReadToEndAsync();
 
-                var error = DecodeOutput(process.StandardError.ReadToEnd());
-                var output = DecodeOutput(process.StandardOutput.ReadToEnd());
+                await process.WaitForExitAsync().ConfigureAwait(false);
+
+                var error = DecodeOutput(await errorTask.ConfigureAwait(false));
+                var output = DecodeOutput(await outputTask.ConfigureAwait(false));
 
                 if (process.ExitCode != 0)
                 {
@@ -305,7 +354,7 @@ public static class NetworkManager
                         return 0;
                     }
 
-                    throw new Exception(LF("Network.Error.CommandFailed", command, process.ExitCode, error, output));
+                    throw CreateApplyException(LF("Network.Error.CommandFailed", command.DisplayText, process.ExitCode, error, output));
                 }
 
                 return process.ExitCode;
@@ -313,7 +362,7 @@ public static class NetworkManager
         }
         catch (Exception ex)
         {
-            throw new Exception(LF("Network.Error.CommandFailedWithError", command, ex.Message));
+            throw CreateApplyException(LF("Network.Error.CommandFailedWithError", command.DisplayText, ex.Message), ex);
         }
     }
 
@@ -369,34 +418,24 @@ public static class NetworkManager
         }
     }
 
-    private static string GetDetailedNetshError(string command)
+    private static async Task<string> GetDetailedNetshErrorAsync(NetshCommand command)
     {
         try
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "netsh",
-                Arguments = command,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
-            };
-
-            using (var process = Process.Start(startInfo))
+            using (var process = Process.Start(command.CreateStartInfo()))
             {
                 if (process == null)
                 {
                     return L("Network.Error.ProcessStartFailed");
                 }
 
-                process.WaitForExit();
+                var errorTask = process.StandardOutput.ReadToEndAsync();
+                var outputTask = process.StandardError.ReadToEndAsync();
 
-                var error = DecodeOutput(process.StandardOutput.ReadToEnd());
-                var output = DecodeOutput(process.StandardError.ReadToEnd());
+                await process.WaitForExitAsync().ConfigureAwait(false);
+
+                var error = DecodeOutput(await errorTask.ConfigureAwait(false));
+                var output = DecodeOutput(await outputTask.ConfigureAwait(false));
 
                 var result = LF("Network.Error.ExitCodeDetail", process.ExitCode);
                 if (!string.IsNullOrEmpty(error))
@@ -415,5 +454,67 @@ public static class NetworkManager
         {
             return LF("Network.Error.ErrorInfoFailed", ex.Message);
         }
+    }
+
+    private static NetworkPresetApplyException CreateApplyException(string message, Exception? innerException = null)
+    {
+        return innerException == null
+            ? new NetworkPresetApplyException(message)
+            : new NetworkPresetApplyException(message, innerException);
+    }
+}
+
+internal sealed class NetshCommand
+{
+    private readonly string[] _arguments;
+
+    internal NetshCommand(params string[] arguments)
+        : this((IEnumerable<string>)arguments)
+    {
+    }
+
+    internal NetshCommand(IEnumerable<string> arguments)
+    {
+        _arguments = arguments
+            .Where(argument => !string.IsNullOrWhiteSpace(argument))
+            .ToArray();
+    }
+
+    internal IReadOnlyList<string> Arguments => _arguments;
+
+    internal string DisplayText => string.Join(" ", _arguments.Select(QuoteForDisplay));
+
+    internal ProcessStartInfo CreateStartInfo()
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "netsh",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
+        };
+
+        foreach (var argument in _arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        return startInfo;
+    }
+
+    private static string QuoteForDisplay(string value)
+    {
+        if (value.Length == 0)
+        {
+            return "\"\"";
+        }
+
+        return value.Any(char.IsWhiteSpace) || value.Contains('"', StringComparison.Ordinal)
+            ? $"\"{value.Replace("\"", "\\\"")}\""
+            : value;
     }
 }

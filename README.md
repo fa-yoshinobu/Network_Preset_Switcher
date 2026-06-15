@@ -2,8 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/fa-yoshinobu/Network_Preset_Switcher?display_name=tag)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/fa-yoshinobu/Network_Preset_Switcher/ci.yml?branch=main&label=CI)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml)
-[![Auto Release](https://img.shields.io/github/actions/workflow/status/fa-yoshinobu/Network_Preset_Switcher/release.yml?label=Auto%20Release)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/release.yml)
-[![License](https://img.shields.io/github/license/fa-yoshinobu/Network_Preset_Switcher)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/8.0)
 ![Screenshot](ScreenShot/screenshot1.png)
 

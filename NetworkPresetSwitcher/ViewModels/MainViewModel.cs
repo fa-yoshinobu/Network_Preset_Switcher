@@ -59,6 +59,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly string _activityLogPath;
     private string _activePresetsFilePath = string.Empty;
     private string _presetsStoragePath = string.Empty;
+    private readonly IDialogService _dialogService;
     private bool _warnedLanguageColumnMissing;
     private bool _warnedEncodingFallback;
     private bool _warnedHeaderMissing;
@@ -75,6 +76,7 @@ public sealed class MainViewModel : ObservableObject
     private bool _suppressPingTargetDirty;
     private bool _isNewPreset;
     private bool _isEditing;
+    private bool _isApplying;
     private bool _isPinging;
     private bool _isErrorVisible;
     private string _errorTitle = string.Empty;
@@ -83,7 +85,14 @@ public sealed class MainViewModel : ObservableObject
     private string _errorFix = string.Empty;
 
     public MainViewModel()
+        : this(new MessageBoxDialogService())
     {
+    }
+
+    internal MainViewModel(IDialogService dialogService)
+    {
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+
         var appDirectory = GetAppDirectory();
         _primaryPresetsFilePath = Path.Combine(appDirectory, PresetCsvFileName);
         _activityLogPath = Path.Combine(appDirectory, ActivityLogFileName);
@@ -108,7 +117,7 @@ public sealed class MainViewModel : ObservableObject
         PresetsView.Filter = FilterPreset;
 
         RefreshAdaptersCommand = new RelayCommand(_ => RefreshAdapters());
-        ApplyCommand = new RelayCommand(_ => ApplyPreset(), _ => CanApply);
+        ApplyCommand = new RelayCommand(async _ => await ApplyPresetAsync(), _ => CanApply);
         NewPresetCommand = new RelayCommand(_ => BeginNewPreset());
         EditPresetCommand = new RelayCommand(_ => BeginEditPreset(), _ => SelectedPreset != null && !IsEditing);
         SavePresetCommand = new RelayCommand(_ => SaveEditingPreset(),
@@ -342,13 +351,25 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    public bool IsApplying
+    {
+        get => _isApplying;
+        private set
+        {
+            if (SetProperty(ref _isApplying, value))
+            {
+                RaiseCommandStates();
+            }
+        }
+    }
+
     public string CurrentStatusBadge => SelectedAdapter?.StatusBadge ?? L("Text.NotSet");
     public string CurrentModeBadge => SelectedAdapter?.ModeBadge ?? L("Text.NotSet");
     public string CurrentIpBadge => SelectedAdapter?.IpBadge ?? L("Label.Ipv4NotSet");
     public string CurrentGatewayBadge => SelectedAdapter?.GatewayBadge ?? L("Label.GwNotSet");
     public string CurrentDnsBadge => SelectedAdapter?.DnsBadge ?? L("Label.DnsNotSet");
 
-    public bool CanApply => SelectedAdapter != null && SelectedPreset != null;
+    public bool CanApply => !IsApplying && SelectedAdapter != null && SelectedPreset != null;
 
     public RelayCommand RefreshAdaptersCommand { get; }
     public RelayCommand ApplyCommand { get; }
@@ -558,7 +579,7 @@ public sealed class MainViewModel : ObservableObject
 
         if (duplicate)
         {
-            MessageBox.Show(L("Msg.ErrorDuplicatePreset"), L("Msg.ErrorTitle"),
+            _dialogService.Show(L("Msg.ErrorDuplicatePreset"), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
@@ -596,7 +617,7 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        var result = MessageBox.Show(L("Msg.ConfirmDelete"), L("Msg.ConfirmTitle"),
+        var result = _dialogService.Show(L("Msg.ConfirmDelete"), L("Msg.ConfirmTitle"),
             MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result != MessageBoxResult.Yes)
@@ -642,16 +663,18 @@ public sealed class MainViewModel : ObservableObject
         ClearError();
     }
 
-    private void ApplyPreset()
+    private async Task ApplyPresetAsync()
     {
-        if (SelectedAdapter == null || SelectedPreset == null)
+        var selectedAdapter = SelectedAdapter;
+        var selectedPreset = SelectedPreset;
+        if (selectedAdapter == null || selectedPreset == null)
         {
             return;
         }
 
-        if (SelectedAdapter.Adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+        if (selectedAdapter.Adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
         {
-            var result = MessageBox.Show(
+            var result = _dialogService.Show(
                 L("Msg.ConfirmWireless"),
                 L("Msg.ConfirmTitle"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
@@ -664,32 +687,37 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
-            NetworkManager.ApplyPreset(SelectedAdapter.Adapter, SelectedPreset);
+            IsApplying = true;
+            await NetworkManager.ApplyPresetAsync(selectedAdapter.Adapter, selectedPreset);
             RefreshAdapters();
 
-            var message = SelectedPreset.IsDhcp
+            var message = selectedPreset.IsDhcp
                 ? L("Msg.ApplyDhcpComplete")
                 : L("Msg.ApplyComplete");
 
-            MessageBox.Show(message, L("Msg.DoneTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
-            AddActivity(new ActivityItem(L("Msg.ApplyTitle"), LF("Msg.ApplyDetail", SelectedPreset.Name, SelectedAdapter.Name), ActivityLevel.Success));
+            _dialogService.Show(message, L("Msg.DoneTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+            AddActivity(new ActivityItem(L("Msg.ApplyTitle"), LF("Msg.ApplyDetail", selectedPreset.Name, selectedAdapter.Name), ActivityLevel.Success));
             ClearError();
         }
         catch (Exception ex)
         {
-            var details = $"{L("Label.Adapter")}: {SelectedAdapter.Name}\n" +
-                          $"{L("Label.Preset")}: {SelectedPreset.Name}\n" +
-                          $"{L("Main.Label.IpAddress")}: {SelectedPreset.IP}\n" +
-                          $"{L("Main.Label.Subnet")}: {SelectedPreset.Subnet}\n" +
-                          $"{L("Main.Label.Gateway")}: {SelectedPreset.Gateway}\n" +
-                          $"{L("Main.Label.Dns1")}: {SelectedPreset.DNS1}\n" +
-                          $"{L("Main.Label.Dns2")}: {SelectedPreset.DNS2}\n\n" +
+            var details = $"{L("Label.Adapter")}: {selectedAdapter.Name}\n" +
+                          $"{L("Label.Preset")}: {selectedPreset.Name}\n" +
+                          $"{L("Main.Label.IpAddress")}: {selectedPreset.IP}\n" +
+                          $"{L("Main.Label.Subnet")}: {selectedPreset.Subnet}\n" +
+                          $"{L("Main.Label.Gateway")}: {selectedPreset.Gateway}\n" +
+                          $"{L("Main.Label.Dns1")}: {selectedPreset.DNS1}\n" +
+                          $"{L("Main.Label.Dns2")}: {selectedPreset.DNS2}\n\n" +
                           $"{L("Msg.ErrorDetailHeader")}\n{ex.Message}\n\n" +
-                          $"{L("Msg.AdapterDetailHeader")}\n{NetworkManager.GetAdapterDetailedInfo(SelectedAdapter.Adapter)}";
+                          $"{L("Msg.AdapterDetailHeader")}\n{NetworkManager.GetAdapterDetailedInfo(selectedAdapter.Adapter)}";
 
-            MessageBox.Show(details, L("Msg.ApplyFailedTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(details, L("Msg.ApplyFailedTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             AddActivity(new ActivityItem(L("Msg.ApplyFailedTitle"), ex.Message, ActivityLevel.Error));
             SetErrorFromMessage(L("Msg.ApplyFailedTitle"), ex.Message);
+        }
+        finally
+        {
+            IsApplying = false;
         }
     }
 
@@ -774,7 +802,7 @@ public sealed class MainViewModel : ObservableObject
             var folder = Path.GetDirectoryName(_activePresetsFilePath);
             if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
             {
-                MessageBox.Show(L("Msg.OpenFolderMissing"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                _dialogService.Show(L("Msg.OpenFolderMissing"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -786,7 +814,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show(LF("Msg.OpenFolderFailed", ex.Message), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(LF("Msg.OpenFolderFailed", ex.Message), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -885,43 +913,43 @@ public sealed class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(preset.Name))
         {
-            MessageBox.Show(L("Msg.ErrorEmptyName"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorEmptyName"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && string.IsNullOrWhiteSpace(preset.IP))
         {
-            MessageBox.Show(L("Msg.ErrorEmptyIp"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorEmptyIp"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4(preset.IP))
         {
-            MessageBox.Show(L("Msg.ErrorInvalidIp"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorInvalidIp"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && !Ipv4Validation.IsValidSubnetMask(preset.Subnet))
         {
-            MessageBox.Show(L("Msg.ErrorInvalidSubnet"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorInvalidSubnet"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.Gateway))
         {
-            MessageBox.Show(L("Msg.ErrorInvalidGateway"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorInvalidGateway"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.DNS1))
         {
-            MessageBox.Show(L("Msg.ErrorInvalidDns1"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorInvalidDns1"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
         if (!preset.IsDhcp && !Ipv4Validation.IsValidIpv4Optional(preset.DNS2))
         {
-            MessageBox.Show(L("Msg.ErrorInvalidDns2"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.Show(L("Msg.ErrorInvalidDns2"), L("Msg.ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
 
@@ -1019,7 +1047,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show(LF("Msg.LoadPresetsFailed", ex.Message), L("Msg.ErrorTitle"),
+            _dialogService.Show(LF("Msg.LoadPresetsFailed", ex.Message), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -1069,13 +1097,13 @@ public sealed class MainViewModel : ObservableObject
 
             var failedPath = _activePresetsFilePath;
             var failureMessage = GetSaveFailureReason(error);
-            MessageBox.Show(LF("Msg.SavePresetsFailed", failedPath, failureMessage), L("Msg.ErrorTitle"),
+            _dialogService.Show(LF("Msg.SavePresetsFailed", failedPath, failureMessage), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
         catch (Exception ex)
         {
             var failureMessage = GetSaveFailureReason(ex);
-            MessageBox.Show(LF("Msg.SavePresetsFailed", _activePresetsFilePath, failureMessage), L("Msg.ErrorTitle"),
+            _dialogService.Show(LF("Msg.SavePresetsFailed", _activePresetsFilePath, failureMessage), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -1233,7 +1261,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         _warnedHeaderMissing = true;
-        MessageBox.Show(L("Msg.CsvHeaderMissing"), L("Msg.WarningTitle"),
+        _dialogService.Show(L("Msg.CsvHeaderMissing"), L("Msg.WarningTitle"),
             MessageBoxButton.OK, MessageBoxImage.Warning);
         AddActivity(new ActivityItem(L("Msg.WarningTitle"), L("Msg.CsvHeaderMissing"), ActivityLevel.Warning));
     }
@@ -1257,7 +1285,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         _warnedLanguageColumnMissing = true;
-        MessageBox.Show(L("Msg.LanguageColumnMissing"), L("Msg.WarningTitle"),
+        _dialogService.Show(L("Msg.LanguageColumnMissing"), L("Msg.WarningTitle"),
             MessageBoxButton.OK, MessageBoxImage.Warning);
         AddActivity(new ActivityItem(L("Msg.WarningTitle"), L("Msg.LanguageColumnMissing"), ActivityLevel.Warning));
     }
@@ -1270,7 +1298,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         _warnedEncodingFallback = true;
-        MessageBox.Show(L("Msg.CsvEncodingFallback"), L("Msg.WarningTitle"),
+        _dialogService.Show(L("Msg.CsvEncodingFallback"), L("Msg.WarningTitle"),
             MessageBoxButton.OK, MessageBoxImage.Warning);
         AddActivity(new ActivityItem(L("Msg.WarningTitle"), L("Msg.CsvEncodingFallback"), ActivityLevel.Warning));
     }
@@ -1325,7 +1353,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show(LF("Msg.OpenNetworkSettingsFailed", ex.Message), L("Msg.ErrorTitle"),
+            _dialogService.Show(LF("Msg.OpenNetworkSettingsFailed", ex.Message), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
