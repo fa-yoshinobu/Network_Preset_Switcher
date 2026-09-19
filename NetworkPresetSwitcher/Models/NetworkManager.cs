@@ -25,6 +25,7 @@ public static class NetworkManager
 
     public static async Task ApplyPresetAsync(NetworkInterface adapter, NetworkPreset preset)
     {
+        preset = preset.Clone();
         if (!IsAdministrator())
         {
             var errorMsg = L("Network.Error.AdminRequired");
@@ -78,11 +79,6 @@ public static class NetworkManager
                 }
                 catch (Exception wmiException)
                 {
-                    if (netshException.Message.Contains("DHCP is already enabled", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return;
-                    }
-
                     var errorMsg = LF("Network.Error.DhcpApplyFailed", adapter.Name, adapter.OperationalStatus, adapter.NetworkInterfaceType, netshException.Message, wmiException.Message);
                     throw CreateApplyException(errorMsg, wmiException);
                 }
@@ -275,28 +271,22 @@ public static class NetworkManager
             var scope = new ManagementScope("root\\cimv2");
             scope.Connect();
 
-            var query = new SelectQuery($"SELECT * FROM Win32_NetworkAdapterConfiguration WHERE Description = '{adapter.Description}'");
+            var query = new SelectQuery(CreateAdapterConfigurationQuery(adapter.Id));
             using (var searcher = new ManagementObjectSearcher(scope, query))
             {
                 var configurations = searcher.Get();
-                if (configurations.Count == 0)
+                if (configurations.Count != 1)
                 {
                     throw CreateApplyException(LF("Network.Error.WmiAdapterNotFound", adapter.Description));
                 }
 
                 foreach (ManagementObject configObj in configurations)
                 {
-                    var inParams = configObj.GetMethodParameters("EnableDHCP");
-                    var outParams = configObj.InvokeMethod("EnableDHCP", inParams, null);
-
-                    if (outParams != null && outParams["ReturnValue"] != null)
+                    ApplyDhcpConfiguration(method =>
                     {
-                        var returnValue = Convert.ToInt32(outParams["ReturnValue"]);
-                        if (returnValue != 0)
-                        {
-                            throw CreateApplyException(LF("Network.Error.WmiDhcpFailed", returnValue));
-                        }
-                    }
+                        using var result = configObj.InvokeMethod(method, null, null);
+                        return result?["ReturnValue"];
+                    });
                 }
             }
         }
@@ -315,6 +305,24 @@ public static class NetworkManager
         catch (Exception ex)
         {
             throw CreateApplyException(LF("Network.Error.WmiApplyFailed", ex.Message), ex);
+        }
+    }
+
+    internal static string CreateAdapterConfigurationQuery(string adapterId)
+    {
+        var id = Guid.Parse(adapterId).ToString("B");
+        return $"SELECT * FROM Win32_NetworkAdapterConfiguration WHERE SettingID = '{id}'";
+    }
+
+    internal static void ApplyDhcpConfiguration(Func<string, object?> invokeMethod)
+    {
+        foreach (var method in new[] { "EnableDHCP", "SetDNSServerSearchOrder" })
+        {
+            var result = invokeMethod(method);
+            if (result == null || Convert.ToUInt32(result) > 1)
+            {
+                throw CreateApplyException($"{method}: {result ?? "No return value"}");
+            }
         }
     }
 

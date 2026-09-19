@@ -8,6 +8,8 @@
 
 A WPF app for Windows to switch IP settings using presets.
 
+[Changelog (Japanese)](CHANGELOG.md)
+
 ## Features
 - Switch between DHCP and static IP
 - Create, edit, duplicate, delete presets
@@ -68,6 +70,8 @@ Notes:
 ![スクリーンショット](ScreenShot/screenshot1.png)
 
 Windows で IP アドレス設定をプリセットから切り替える WPF アプリです。
+
+[変更履歴](CHANGELOG.md)
 
 ## 主な機能
 - DHCP / 固定 IP の切り替え

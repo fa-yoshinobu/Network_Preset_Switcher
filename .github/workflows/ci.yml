@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'ScreenShot/**'
+      - 'LICENSE'
   pull_request:
 permissions:
   contents: read
@@ -29,7 +34,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
           cache: true
-          cache-dependency-path: NetworkPresetSwitcher/NetworkPresetSwitcher.csproj
+          cache-dependency-path: '**/*.csproj'
 
       - name: Restore
         run: dotnet restore NetworkPresetSwitcher.sln

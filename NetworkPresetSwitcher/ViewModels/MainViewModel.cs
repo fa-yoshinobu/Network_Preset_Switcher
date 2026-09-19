@@ -89,11 +89,11 @@ public sealed class MainViewModel : ObservableObject
     {
     }
 
-    internal MainViewModel(IDialogService dialogService)
+    internal MainViewModel(IDialogService dialogService, string? appDirectory = null)
     {
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-        var appDirectory = GetAppDirectory();
+        appDirectory ??= GetAppDirectory();
         _primaryPresetsFilePath = Path.Combine(appDirectory, PresetCsvFileName);
         _activityLogPath = Path.Combine(appDirectory, ActivityLogFileName);
         SetActivePresetsPath(_primaryPresetsFilePath);
@@ -410,14 +410,20 @@ public sealed class MainViewModel : ObservableObject
 
     private void RefreshAdapters()
     {
+        RefreshAdapters(NetworkInterface.GetAllNetworkInterfaces());
+    }
+
+    internal void RefreshAdapters(IEnumerable<NetworkInterface> availableAdapters)
+    {
         var selectedId = SelectedAdapter?.Id;
         Adapters.Clear();
 
-        var adapters = NetworkInterface.GetAllNetworkInterfaces()
+        var adapters = availableAdapters
             .Where(adapter =>
                 (adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet ||
                  adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) &&
                 !adapter.Description.Contains("bluetooth", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(GetAdapterPriority)
             .Select(adapter => new AdapterViewModel(adapter))
             .ToList();
 
@@ -437,6 +443,34 @@ public sealed class MainViewModel : ObservableObject
 
         AddActivity(new ActivityItem(L("Msg.AdaptersRefreshedTitle"), LF("Msg.AdaptersRefreshedDetail", Adapters.Count)));
         ClearError();
+    }
+
+    internal static int GetAdapterPriority(NetworkInterface adapter)
+    {
+        ArgumentNullException.ThrowIfNull(adapter);
+
+        return IsInternalAdapterName(adapter.Name) || IsInternalAdapterName(adapter.Description) ? 1 : 0;
+    }
+
+    internal static bool IsInternalAdapterName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim();
+        return normalized.Contains("virtual", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("hyper-v", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("vethernet", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("vmware", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("virtualbox", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("wsl", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("docker", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("container", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("loopback", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("npcap", StringComparison.OrdinalIgnoreCase) ||
+               normalized.Contains("tap-windows", StringComparison.OrdinalIgnoreCase);
     }
 
     private void OnPresetsChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -574,13 +608,21 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var duplicate = Presets.Any(p =>
-            !ReferenceEquals(p, SelectedPreset) &&
+            (_isNewPreset || !ReferenceEquals(p, SelectedPreset)) &&
             p.Name.Equals(EditingPreset.Name, StringComparison.OrdinalIgnoreCase));
 
         if (duplicate)
         {
             _dialogService.Show(L("Msg.ErrorDuplicatePreset"), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var pendingPresets = _isNewPreset || SelectedPreset == null
+            ? Presets.Append(EditingPreset)
+            : Presets.Select(p => ReferenceEquals(p, SelectedPreset) ? EditingPreset : p);
+        if (!SavePresets(pendingPresets))
+        {
             return;
         }
 
@@ -602,7 +644,6 @@ public sealed class MainViewModel : ObservableObject
             SelectedPreset.Comment = EditingPreset.Comment;
         }
 
-        SavePresets();
         PresetsView.Refresh();
         BeginEditFromSelected();
 
@@ -625,9 +666,13 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        if (!SavePresets(Presets.Where(p => !ReferenceEquals(p, SelectedPreset))))
+        {
+            return;
+        }
+
         var removedName = SelectedPreset.Name;
         Presets.Remove(SelectedPreset);
-        SavePresets();
         PresetsView.Refresh();
 
         SelectedPreset = Presets.FirstOrDefault();
@@ -654,8 +699,12 @@ public sealed class MainViewModel : ObservableObject
         var newPreset = SelectedPreset.Clone();
         newPreset.Name = newName;
 
+        if (!SavePresets(Presets.Append(newPreset)))
+        {
+            return;
+        }
+
         Presets.Add(newPreset);
-        SavePresets();
         PresetsView.Refresh();
         SelectedPreset = newPreset;
 
@@ -666,7 +715,7 @@ public sealed class MainViewModel : ObservableObject
     private async Task ApplyPresetAsync()
     {
         var selectedAdapter = SelectedAdapter;
-        var selectedPreset = SelectedPreset;
+        var selectedPreset = SelectedPreset?.Clone();
         if (selectedAdapter == null || selectedPreset == null)
         {
             return;
@@ -1052,7 +1101,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private void SavePresets()
+    private bool SavePresets(IEnumerable<NetworkPreset>? presets = null)
     {
         try
         {
@@ -1072,7 +1121,7 @@ public sealed class MainViewModel : ObservableObject
                 AppLocalization.CurrentLanguage
             }));
 
-            foreach (var preset in Presets)
+            foreach (var preset in presets ?? Presets)
             {
                 builder.AppendLine(PresetCsvFormat.ToCsvLine(new[]
                 {
@@ -1092,7 +1141,7 @@ public sealed class MainViewModel : ObservableObject
             var contents = builder.ToString();
             if (TryWritePresets(_activePresetsFilePath, contents, out var error))
             {
-                return;
+                return true;
             }
 
             var failedPath = _activePresetsFilePath;
@@ -1106,6 +1155,8 @@ public sealed class MainViewModel : ObservableObject
             _dialogService.Show(LF("Msg.SavePresetsFailed", _activePresetsFilePath, failureMessage), L("Msg.ErrorTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+
+        return false;
     }
 
     private void SetActivePresetsPath(string path)

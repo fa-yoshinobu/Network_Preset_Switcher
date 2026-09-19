@@ -20,7 +20,7 @@ dotnet test NetworkPresetSwitcher.sln -c Release --no-build --verbosity normal
 if errorlevel 1 goto :error
 
 echo [5/5] publish smoke test...
-call build.bat win-x64 artifacts\ci
+dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o artifacts\ci
 if errorlevel 1 goto :error
 if not exist artifacts\ci\NetworkPresetSwitcher.exe goto :error
 

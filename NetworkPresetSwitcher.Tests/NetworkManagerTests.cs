@@ -5,6 +5,50 @@ namespace NetworkPresetSwitcher.Tests;
 
 public class NetworkManagerTests
 {
+    [Theory]
+    [InlineData("{AABBCCDD-1234-5678-90AB-1234567890AB}")]
+    [InlineData("aabbccdd-1234-5678-90ab-1234567890ab")]
+    public void WmiQueryTargetsOnlyTheAdapterId(string adapterId)
+    {
+        Assert.Equal(
+            "SELECT * FROM Win32_NetworkAdapterConfiguration WHERE SettingID = '{aabbccdd-1234-5678-90ab-1234567890ab}'",
+            NetworkManager.CreateAdapterConfigurationQuery(adapterId));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("Ethernet")]
+    [InlineData("' OR 1=1")]
+    public void WmiQueryRejectsInvalidIds(string adapterId)
+    {
+        Assert.Throws<FormatException>(() => NetworkManager.CreateAdapterConfigurationQuery(adapterId));
+    }
+
+    [Theory]
+    [InlineData(0u)]
+    [InlineData(1u)]
+    public void DhcpFallbackResetsDnsAfterEnablingDhcp(uint result)
+    {
+        var calls = new List<string>();
+        NetworkManager.ApplyDhcpConfiguration(method =>
+        {
+            calls.Add(method);
+            return result;
+        });
+        Assert.Equal(new[] { "EnableDHCP", "SetDNSServerSearchOrder" }, calls);
+    }
+
+    [Theory]
+    [InlineData("EnableDHCP", 91u)]
+    [InlineData("SetDNSServerSearchOrder", 91u)]
+    [InlineData("SetDNSServerSearchOrder", null)]
+    public void DhcpFallbackDoesNotHideFailures(string failedMethod, uint? result)
+    {
+        var exception = Assert.Throws<NetworkPresetApplyException>(() =>
+            NetworkManager.ApplyDhcpConfiguration(method => method == failedMethod ? result : 0u));
+        Assert.Contains(failedMethod, exception.Message);
+    }
+
     [Fact]
     public void NetshCommandUsesArgumentListForAdapterName()
     {
