@@ -1,7 +1,19 @@
-# 変更履歴
+# Changelog
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Git のタグ・コミット差分から、利用者向けの変更と主要な開発・配布変更をまとめています。
 過去の日付は対象コミットの日付です。公開日を示すものではありません。
+
+## [Unreleased]
+
+### Changed
+
+- Standardized fixed-name Windows ZIP assets, ZIP SHA-256 checksums and English release notes.
+
+### Fixed
+
+- Unified VirusTotal completion checks and preserved unrelated release notes during rescans.
 
 ## 1.0.4 — 2026-09-20
 
