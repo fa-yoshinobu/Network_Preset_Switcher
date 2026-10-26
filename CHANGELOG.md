@@ -7,6 +7,8 @@ Git のタグ・コミット差分から、利用者向けの変更と主要な�
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-10-27
+
 ### Changed
 
 - Standardized fixed-name Windows ZIP assets, ZIP SHA-256 checksums and English release notes.
