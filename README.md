@@ -126,9 +126,9 @@ Preset,Name,Group,IP,Subnet,Gateway,DNS1,DNS2,Comment,
 - **テスト**: xUnit を使用したユニットテストが `NetworkPresetSwitcher.Tests` にあります。
 - **CI**: GitHub Actions により、ビルド、コード整形チェック、テストが自動実行されます。
 
-## Release distribution (next release)
+## Release distribution
 
-The fixed-name ZIP and checksum links below become available with the next standard release. Existing release assets and the download links above remain unchanged.
+The fixed-name ZIP and checksum links below are available for the current release. Older releases retain their original assets.
 
 - [Latest Windows x64 ZIP](https://github.com/fa-yoshinobu/Network_Preset_Switcher/releases/latest/download/NetworkPresetSwitcher-win-x64.zip)
 - [ZIP SHA-256 checksum](https://github.com/fa-yoshinobu/Network_Preset_Switcher/releases/latest/download/NetworkPresetSwitcher-win-x64.zip.sha256)
