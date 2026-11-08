@@ -527,13 +527,16 @@ public sealed class MainViewModel : ObservableObject
 
     private void RefreshAdapters()
     {
-        RefreshAdapters(NetworkInterface.GetAllNetworkInterfaces());
+        RefreshAdapters(AdapterViewModel.FilterVisible(
+            NetworkInterface.GetAllNetworkInterfaces(),
+            AdapterViewModel.LoadVisibleAdapterIds()));
     }
 
     internal void RefreshAdapters(IEnumerable<NetworkInterface> availableAdapters)
     {
         var selectedId = SelectedAdapter?.Id;
         Adapters.Clear();
+        var deviceInfo = AdapterViewModel.LoadDeviceInfoMap();
 
         var adapters = availableAdapters
             .Where(adapter =>
@@ -541,7 +544,7 @@ public sealed class MainViewModel : ObservableObject
                  adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) &&
                 !adapter.Description.Contains("bluetooth", StringComparison.OrdinalIgnoreCase))
             .OrderBy(GetAdapterPriority)
-            .Select(adapter => new AdapterViewModel(adapter))
+            .Select(adapter => new AdapterViewModel(adapter, deviceInfo))
             .ToList();
 
         foreach (var adapter in adapters)

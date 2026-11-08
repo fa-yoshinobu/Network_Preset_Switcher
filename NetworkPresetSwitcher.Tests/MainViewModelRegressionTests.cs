@@ -233,6 +233,19 @@ public class MainViewModelRegressionTests
         }
     }
 
+    [Fact]
+    public void FilterVisibleDropsFilterLayersAndKeepsAllWhenIdsUnavailable()
+    {
+        var lan = new TestAdapter("{AAAA}", "Realtek Ethernet");
+        var filterLayer = new TestAdapter("{BBBB}", "Realtek Ethernet-Npcap Packet Driver (NPCAP)-0000");
+        NetworkInterface[] adapters = { lan, filterLayer };
+
+        var visible = AdapterViewModel.FilterVisible(adapters, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "{aaaa}" });
+        Assert.Equal(new[] { "{AAAA}" }, visible.Select(a => a.Id));
+
+        Assert.Equal(2, AdapterViewModel.FilterVisible(adapters, null).Count());
+    }
+
     private sealed class TestAdapter(string id, string name) : NetworkInterface
     {
         public override string Id => id;

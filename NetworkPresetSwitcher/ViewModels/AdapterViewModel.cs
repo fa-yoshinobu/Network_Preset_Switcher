@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
@@ -12,10 +13,10 @@ public sealed class AdapterViewModel : ObservableObject
     private readonly string _deviceName;
     private readonly string _manufacturer;
 
-    public AdapterViewModel(NetworkInterface adapter)
+    public AdapterViewModel(NetworkInterface adapter, IReadOnlyDictionary<string, (string Name, string Manufacturer)>? deviceInfo = null)
     {
         Adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
-        (_deviceName, _manufacturer) = LoadDeviceInfo(adapter);
+        (_deviceName, _manufacturer) = ResolveDeviceInfo(adapter, deviceInfo);
     }
 
     public NetworkInterface Adapter { get; }
@@ -234,21 +235,25 @@ public sealed class AdapterViewModel : ObservableObject
 
     private static string L(string key) => Localization.T(key);
 
-    private static (string Name, string Manufacturer) LoadDeviceInfo(NetworkInterface adapter)
+    /// <summary>
+    /// Reads Name / Manufacturer for all adapters with one WMI query.
+    /// A query per adapter takes about 0.2 s each and made startup slow on PCs with many adapters.
+    /// </summary>
+    public static IReadOnlyDictionary<string, (string Name, string Manufacturer)> LoadDeviceInfoMap()
     {
+        var map = new Dictionary<string, (string Name, string Manufacturer)>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            var guid = adapter.Id;
-            if (!string.IsNullOrWhiteSpace(guid))
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT GUID, Name, Manufacturer FROM Win32_NetworkAdapter WHERE GUID IS NOT NULL");
+            foreach (ManagementObject mo in searcher.Get())
             {
-                var query = $"SELECT Name, Manufacturer FROM Win32_NetworkAdapter WHERE GUID = '{guid}'";
-                using var searcher = new ManagementObjectSearcher(query);
-                foreach (ManagementObject mo in searcher.Get())
+                using (mo)
                 {
-                    var name = mo["Name"] as string ?? string.Empty;
-                    var manufacturer = mo["Manufacturer"] as string ?? string.Empty;
-                    return (string.IsNullOrWhiteSpace(name) ? adapter.Description : name,
-                        string.IsNullOrWhiteSpace(manufacturer) ? L("Text.NotSet") : manufacturer);
+                    if (mo["GUID"] is string guid && !string.IsNullOrWhiteSpace(guid))
+                    {
+                        map[guid] = (mo["Name"] as string ?? string.Empty, mo["Manufacturer"] as string ?? string.Empty);
+                    }
                 }
             }
         }
@@ -256,7 +261,71 @@ public sealed class AdapterViewModel : ObservableObject
         {
         }
 
+        return map;
+    }
+
+    /// <summary>
+    /// Returns the GUIDs of adapters shown in Windows "Network Connections" (MSFT_NetAdapter, Hidden = False,
+    /// excluding Not Present). GetAllNetworkInterfaces also returns filter layers (Npcap / WFP / QoS -0000),
+    /// WAN Miniports and vSwitch ports, which must not be offered as candidates.
+    /// Returns null when the query fails so that callers can fall back to the unfiltered list.
+    /// </summary>
+    public static ISet<string>? LoadVisibleAdapterIds()
+    {
+        const uint NotPresent = 6;
+        try
+        {
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using var searcher = new ManagementObjectSearcher(
+                @"root\StandardCimv2",
+                "SELECT InterfaceGuid, Hidden, InterfaceOperationalStatus FROM MSFT_NetAdapter");
+            foreach (ManagementObject mo in searcher.Get())
+            {
+                using (mo)
+                {
+                    if (mo["Hidden"] is true)
+                    {
+                        continue;
+                    }
+
+                    if (mo["InterfaceOperationalStatus"] is uint status && status == NotPresent)
+                    {
+                        continue;
+                    }
+
+                    if (mo["InterfaceGuid"] is string guid && !string.IsNullOrWhiteSpace(guid))
+                    {
+                        ids.Add(guid);
+                    }
+                }
+            }
+
+            return ids.Count > 0 ? ids : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    internal static IEnumerable<NetworkInterface> FilterVisible(
+        IEnumerable<NetworkInterface> adapters,
+        ISet<string>? visibleIds)
+    {
+        return visibleIds == null ? adapters : adapters.Where(adapter => visibleIds.Contains(adapter.Id));
+    }
+
+    private static (string Name, string Manufacturer) ResolveDeviceInfo(
+        NetworkInterface adapter,
+        IReadOnlyDictionary<string, (string Name, string Manufacturer)>? deviceInfo)
+    {
+        if (deviceInfo != null && !string.IsNullOrWhiteSpace(adapter.Id) &&
+            deviceInfo.TryGetValue(adapter.Id, out var info))
+        {
+            return (string.IsNullOrWhiteSpace(info.Name) ? adapter.Description : info.Name,
+                string.IsNullOrWhiteSpace(info.Manufacturer) ? L("Text.NotSet") : info.Manufacturer);
+        }
+
         return (adapter.Description, L("Text.NotSet"));
     }
 }
-
