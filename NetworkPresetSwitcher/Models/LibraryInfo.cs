@@ -43,40 +43,46 @@ public static class LibraryCatalog
             ),
             new(
                 "System.Text.Json",
-                "8.0.5",
+                GetLibraryVersion(typeof(System.Text.Json.JsonSerializer).Assembly),
                 "MIT License",
                 Localization.T("Library.SystemTextJson.Description"),
                 "https://github.com/dotnet/runtime"
             ),
             new(
                 "System.Management",
-                "8.0.0",
+                GetLibraryVersion(typeof(System.Management.ManagementObject).Assembly),
                 "MIT License",
                 Localization.T("Library.SystemManagement.Description"),
                 "https://github.com/dotnet/runtime"
             ),
             new(
                 "System.Text.Encoding.CodePages",
-                "8.0.0",
+                GetLibraryVersion(typeof(System.Text.CodePagesEncodingProvider).Assembly),
                 "MIT License",
                 Localization.T("Library.SystemTextEncodingCodePages.Description"),
                 "https://github.com/dotnet/runtime"
             ),
             new(
-                ".NET 8",
-                "8.x",
+                ".NET 10",
+                Environment.Version.ToString(),
                 "MIT License",
                 Localization.T("Library.DotNet.Description"),
                 "https://github.com/dotnet/runtime"
             ),
             new(
                 "WPF",
-                "8.x",
+                GetLibraryVersion(typeof(System.Windows.Window).Assembly),
                 "MIT License",
                 Localization.T("Library.Wpf.Description"),
                 "https://github.com/dotnet/wpf"
             )
         };
+    }
+
+    private static string GetLibraryVersion(Assembly assembly)
+    {
+        var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        return version?.Split('+')[0] ?? assembly.GetName().Version?.ToString() ?? string.Empty;
     }
 
     public static string GetApplicationName()

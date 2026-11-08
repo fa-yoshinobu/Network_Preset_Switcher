@@ -8,6 +8,10 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <conv:InverseBooleanConverter x:Key="InverseBool" />
         <conv:ActivityLevelToBrushConverter x:Key="ActivityLevelToBrush" />
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+        <conv:StringToVisibilityConverter x:Key="StringToVisibility" />
+        <conv:EmptyToDashConverter x:Key="EmptyToDash" />
+        <conv:GroupNameConverter x:Key="GroupName" />
         <FontFamily x:Key="AppFont">Yu Gothic UI</FontFamily>
         <FontFamily x:Key="AppFontMono">Cascadia Mono</FontFamily>
         <FontFamily x:Key="IconFont">Segoe MDL2 Assets</FontFamily>
@@ -44,13 +48,16 @@
         <SolidColorBrush x:Key="BrushWarningLight" Color="#F3E9D3" />
         <SolidColorBrush x:Key="BrushDangerLight" Color="#F3E2E2" />
         <SolidColorBrush x:Key="BrushNeutralLight" Color="#EEF2F6" />
+        <SolidColorBrush x:Key="BrushChangedLight" Color="#FFF4DB" />
+        <SolidColorBrush x:Key="BrushSelectedLight" Color="#E6F1F3" />
+        <SolidColorBrush x:Key="BrushDivider" Color="#E3E8EF" />
         <conv:BoolToBrushConverter x:Key="BoolToDangerBrush"
                                    TrueBrush="{StaticResource BrushDanger}"
                                    FalseBrush="{StaticResource BrushBorder}" />
 
         <Style TargetType="Window">
             <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="Foreground" Value="{StaticResource BrushText}" />
             <Setter Property="Background">
                 <Setter.Value>
@@ -137,6 +144,7 @@
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
                                               RecognizesAccessKey="True" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -163,6 +171,125 @@
 
         <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
             <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="CompactButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+
+        <Style x:Key="CompactPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="14,6" />
+        </Style>
+
+        <Style x:Key="LinkButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource BrushPrimary}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="LinkText" Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="LinkText" Property="TextDecorations" Value="Underline" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="IconToggleButton" TargetType="ToggleButton">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Background" Value="{StaticResource BrushSurface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" CornerRadius="8" BorderThickness="1"
+                                Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSurfaceAlt}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushSelectedLight}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BrushPrimary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Group header in the preset list: chevron + "Name (count)". -->
+        <Style x:Key="GroupExpander" TargetType="Expander">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <StackPanel>
+                            <ToggleButton x:Name="HeaderToggle"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          Cursor="Hand" Focusable="False">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent" Padding="2,3">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock x:Name="Chevron" Text="&#xE70D;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                                           Foreground="{StaticResource BrushMuted}" VerticalAlignment="Center" Margin="0,1,8,0"
+                                                           RenderTransformOrigin="0.5,0.5">
+                                                    <TextBlock.RenderTransform>
+                                                        <RotateTransform Angle="0" />
+                                                    </TextBlock.RenderTransform>
+                                                </TextBlock>
+                                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter TargetName="Chevron" Property="RenderTransform">
+                                                    <Setter.Value>
+                                                        <RotateTransform Angle="-90" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpandSite" Visibility="Collapsed" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Margin" Value="0,8,12,0" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style x:Key="FieldError" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#A93D3D" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="FieldHint" TargetType="TextBlock" BasedOn="{StaticResource SubtleText}">
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
         <Style x:Key="SegmentButtonLeft" TargetType="ToggleButton">

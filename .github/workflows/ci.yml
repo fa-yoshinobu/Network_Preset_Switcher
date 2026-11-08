@@ -32,7 +32,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
           cache: true
           cache-dependency-path: '**/*.csproj'
 
@@ -49,7 +49,7 @@ jobs:
         run: dotnet test NetworkPresetSwitcher.sln -c Release --no-build --verbosity normal
 
       - name: Publish single-file executable
-        run: dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore -o artifacts\publish
+        run: dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
 
       - name: Verify publish output
         shell: pwsh

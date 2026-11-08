@@ -186,4 +186,45 @@
     <sys:String x:Key="Library.SystemTextEncodingCodePages.Description">旧来の文字コードページを扱うための拡張</sys:String>
     <sys:String x:Key="Library.DotNet.Description">.NET ランタイム</sys:String>
     <sys:String x:Key="Library.Wpf.Description">Windows Presentation Foundation</sys:String>
+
+    <sys:String x:Key="Status.Unknown">不明</sys:String>
+    <sys:String x:Key="Apply.Column.Item">項目</sys:String>
+    <sys:String x:Key="Apply.Column.Current">現在</sys:String>
+    <sys:String x:Key="Apply.Column.After">適用後</sys:String>
+    <sys:String x:Key="Apply.SkipConfirmWired">有線アダプタではアプリを閉じるまで確認しない</sys:String>
+    <sys:String x:Key="Apply.Button.Confirm">適用する</sys:String>
+    <sys:String x:Key="Apply.Confirm.Title">{0} を適用しますか？</sys:String>
+    <sys:String x:Key="Apply.Confirm.Adapter">対象アダプタ: {0}</sys:String>
+    <sys:String x:Key="Apply.Confirm.Interruption">適用中は数秒間このアダプタの通信が切れます。</sys:String>
+    <sys:String x:Key="Apply.Value.Auto">自動 (DHCP)</sys:String>
+    <sys:String x:Key="Apply.Panel.Title">適用すると変わる項目（{0}）</sys:String>
+    <sys:String x:Key="Apply.Panel.NoChanges">現在の設定と同じです（適用済み）</sys:String>
+    <sys:String x:Key="Apply.Panel.OtherSame">その他の項目は現在と同じです</sys:String>
+    <sys:String x:Key="Apply.Button.Preset">{0} を適用</sys:String>
+    <sys:String x:Key="Ping.Gateway">GW へ Ping</sys:String>
+    <sys:String x:Key="Ping.Gateway.None">GW なし</sys:String>
+    <sys:String x:Key="Ping.Target">宛先</sys:String>
+    <sys:String x:Key="Ping.EnterHint">Enter で実行</sys:String>
+    <sys:String x:Key="Ping.Result.Running">{0} に Ping 中…</sys:String>
+    <sys:String x:Key="Ping.Result.Success">{0} 応答あり · {1} ms</sys:String>
+    <sys:String x:Key="Ping.Result.Failure">{0} 応答なし ({1})</sys:String>
+    <sys:String x:Key="Edit.Badge">編集中</sys:String>
+    <sys:String x:Key="Edit.Status.Dirty">未保存の変更があります</sys:String>
+    <sys:String x:Key="Edit.Status.Clean">変更はありません</sys:String>
+    <sys:String x:Key="Edit.Status.Errors">{0} 件のエラー</sys:String>
+    <sys:String x:Key="Edit.Subnet.PrefixHint">= {0} として保存します</sys:String>
+    <sys:String x:Key="Edit.Gateway.Hint">空欄可（ゲートウェイなし）</sys:String>
+    <sys:String x:Key="Edit.EnterHint">入力欄で Enter を押しても設定は適用されません</sys:String>
+    <sys:String x:Key="Edit.DhcpInfo">IPアドレス・サブネット・ゲートウェイ・DNS は DHCP サーバーから自動で取得します。</sys:String>
+    <sys:String x:Key="Error.Field.Ip">IPv4 アドレスの形式で入力してください（例: 192.168.0.10）</sys:String>
+    <sys:String x:Key="Error.Field.Subnet">255.255.255.0 または /24 の形式で入力してください</sys:String>
+    <sys:String x:Key="Error.Field.Gateway">IPv4 アドレスの形式で入力するか、空欄にしてください</sys:String>
+    <sys:String x:Key="Error.Field.Dns">IPv4 アドレスの形式で入力するか、空欄にしてください</sys:String>
+    <sys:String x:Key="Preset.Active">適用中</sys:String>
+    <sys:String x:Key="Presets.Hint">ダブルクリックで適用 · 一覧を選択中のみ Enter で適用</sys:String>
+    <sys:String x:Key="Search.Placeholder">名前・IP・グループ・コメントで検索</sys:String>
+    <sys:String x:Key="Menu.Settings">設定とバージョン情報</sys:String>
+    <sys:String x:Key="Menu.StoragePath">プリセット保存先</sys:String>
+    <sys:String x:Key="Menu.Version">バージョン</sys:String>
+    <sys:String x:Key="Menu.ShowVersion">バージョン情報を表示</sys:String>
 </ResourceDictionary>

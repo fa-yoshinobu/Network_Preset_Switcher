@@ -9,10 +9,15 @@ Requirements: Windows x64. The .NET runtime is included. Changing network settin
 
 ## Changes
 ### Changed
-- Standardized Windows ZIP distribution, checksums and release documentation.
+- Migrated the app, tests and build workflows to .NET 10. The Windows executable includes .NET 10.0.14; no separate runtime installation is required.
+- Redesigned the main window and application icon, with a responsive layout, clearer adapter status, preset details and inline validation.
+- Added an apply preview and confirmation dialog, active-preset markers and subnet prefix input such as `/24`.
+- Display actual bundled library versions in the version information window.
 
 ### Fixed
-- Wait for VirusTotal analysis to complete and preserve unrelated release notes when updating scan results.
+- Prevent Enter in editor or Ping fields from applying a preset without confirmation.
+- Correct disconnected status badges and button padding.
+- Prevent duplicate build output directories and consolidate redundant DHCP test coverage.
 
 <!-- virustotal:start -->
 {{VIRUSTOTAL_CONTENT}}

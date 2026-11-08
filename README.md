@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/fa-yoshinobu/Network_Preset_Switcher?display_name=tag)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/fa-yoshinobu/Network_Preset_Switcher/ci.yml?branch=main&label=CI)](https://github.com/fa-yoshinobu/Network_Preset_Switcher/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
 ![Screenshot](ScreenShot/screenshot1.png)
 
 A WPF app for Windows to switch IP settings using presets.
@@ -20,6 +20,11 @@ A WPF app for Windows to switch IP settings using presets.
 - Presets saved in CSV (editable in Excel)
 
 ## Build
+Requires the .NET 10 SDK on Windows. The single-file EXE bundles .NET 10.0.14;
+users do not need to install .NET separately. Update `RuntimeFrameworkVersion`
+and `System.Management` in the app project and rebuild the distribution when
+installing runtime security updates.
+
 ```
 build.bat
 ```

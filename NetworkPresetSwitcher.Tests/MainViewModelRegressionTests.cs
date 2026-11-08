@@ -135,6 +135,73 @@ public class MainViewModelRegressionTests
         });
     }
 
+    [Fact]
+    public void EditorBlocksApplyTracksDirtyStateAndStoresPrefixAsMask()
+    {
+        RunOnStaThread(() =>
+        {
+            var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(directory);
+            try
+            {
+                var vm = new MainViewModel(new TestDialogs(), directory);
+                vm.RefreshAdapters(new NetworkInterface[] { new TestAdapter("lan", "Intel Ethernet") });
+
+                vm.NewPresetCommand.Execute(null);
+                Assert.True(vm.IsDirty);
+                Assert.False(vm.ApplyCommand.CanExecute(null));
+                vm.EditingPreset!.Name = "Line1";
+                vm.EditingPreset.IP = "192.168.0.10";
+                vm.EditingPreset.Subnet = "/24";
+                Assert.True(vm.HasSubnetHint);
+                Assert.Equal(0, vm.EditErrorCount);
+                vm.SavePresetCommand.Execute(null);
+
+                var saved = Assert.Single(vm.Presets);
+                Assert.Equal("255.255.255.0", saved.Subnet);
+                Assert.Contains("255.255.255.0", File.ReadAllText(Path.Combine(directory, "NetworkPresetSwitcher.csv")));
+                Assert.False(vm.IsEditing);
+                Assert.True(vm.ApplyCommand.CanExecute(null));
+
+                vm.EditPresetCommand.Execute(null);
+                Assert.False(vm.IsDirty);
+                Assert.False(vm.ApplyCommand.CanExecute(null));
+                vm.EditingPreset!.IP = "192.168.0.999";
+                Assert.True(vm.IsDirty);
+                Assert.Equal(1, vm.EditErrorCount);
+                Assert.False(vm.SavePresetCommand.CanExecute(null));
+            }
+            finally
+            {
+                Directory.Delete(directory, true);
+            }
+        });
+    }
+
+    [Fact]
+    public void AdapterWithoutIpInformationShowsNoActivePresetAndUnknownStatus()
+    {
+        RunOnStaThread(() =>
+        {
+            var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            try
+            {
+                var vm = new MainViewModel(new TestDialogs(), directory);
+                vm.RefreshAdapters(new NetworkInterface[] { new TestAdapter("lan", "Intel Ethernet") });
+                var preset = new NetworkPreset { Name = "A", IP = "192.168.0.10" };
+                vm.Presets.Add(preset);
+
+                Assert.Equal("Unknown", vm.CurrentStatusKind);
+                Assert.False(preset.IsActive);
+                Assert.False(MainViewModel.IsPresetActive(preset, vm.SelectedAdapter));
+            }
+            finally
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, true);
+            }
+        });
+    }
+
     private static void RunOnStaThread(Action check)
     {
         Exception? failure = null;
@@ -159,6 +226,11 @@ public class MainViewModelRegressionTests
         }
         public MessageBoxResult Show(string text, string caption, MessageBoxButton button, MessageBoxImage icon, MessageBoxResult defaultResult)
             => Show(text, caption, button, icon);
+        public bool ConfirmApply(ApplyConfirmation confirmation, out bool skipFutureConfirmation)
+        {
+            skipFutureConfirmation = false;
+            return false;
+        }
     }
 
     private sealed class TestAdapter(string id, string name) : NetworkInterface

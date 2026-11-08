@@ -166,6 +166,40 @@ public class PresetCsvCharacterizationTests
     }
 
     [Theory]
+    [InlineData("/24", "255.255.255.0")]
+    [InlineData("24", "255.255.255.0")]
+    [InlineData(" /16 ", "255.255.0.0")]
+    [InlineData("/1", "128.0.0.0")]
+    [InlineData("/31", "255.255.255.254")]
+    [InlineData("255.255.255.0", "255.255.255.0")]
+    [InlineData("/0", "/0")]
+    [InlineData("/32", "/32")]
+    [InlineData("", "")]
+    public void SubnetPrefixIsNormalizedToDottedMask(string value, string expected)
+    {
+        Assert.Equal(expected, Ipv4Validation.NormalizeSubnet(value));
+    }
+
+    [Theory]
+    [InlineData("/24", true)]
+    [InlineData("/0", false)]
+    [InlineData("/32", false)]
+    [InlineData("/abc", false)]
+    public void SubnetValidationAcceptsPrefixLengths(string value, bool expected)
+    {
+        Assert.Equal(expected, Ipv4Validation.IsValidSubnetMask(value));
+    }
+
+    [Theory]
+    [InlineData("255.255.255.0", 24)]
+    [InlineData("/20", 20)]
+    [InlineData("255.0.255.0", 0)]
+    public void PrefixLengthIsReportedForValidMasks(string mask, int expected)
+    {
+        Assert.Equal(expected, Ipv4Validation.GetPrefixLength(mask));
+    }
+
+    [Theory]
     [InlineData("", true)]
     [InlineData("192.168.1.10", true)]
     [InlineData("999.168.1.10", false)]

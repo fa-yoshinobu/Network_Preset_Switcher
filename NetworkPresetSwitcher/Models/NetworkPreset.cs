@@ -17,6 +17,7 @@ public sealed class NetworkPreset : ObservableObject
     private string _dns2 = string.Empty;
     private string _comment = string.Empty;
     private string _lastStaticIp = string.Empty;
+    private bool _isActive;
 
     public string Name
     {
@@ -129,6 +130,16 @@ public sealed class NetworkPreset : ObservableObject
             OnPropertyChanged(nameof(IsDhcp));
             OnPropertyChanged(nameof(IpLine));
         }
+    }
+
+    /// <summary>
+    /// True when this preset matches the selected adapter's current settings. Display only; never saved.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsActive
+    {
+        get => _isActive;
+        set => SetProperty(ref _isActive, value);
     }
 
     [JsonIgnore]

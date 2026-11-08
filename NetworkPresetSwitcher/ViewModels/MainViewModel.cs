@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -83,6 +83,9 @@ public sealed class MainViewModel : ObservableObject
     private string _errorDetail = string.Empty;
     private string _errorCause = string.Empty;
     private string _errorFix = string.Empty;
+    private bool _skipWiredApplyConfirmation;
+    private string _pingResultText = string.Empty;
+    private string _pingResultKind = "None";
 
     public MainViewModel()
         : this(new MessageBoxDialogService())
@@ -127,8 +130,10 @@ public sealed class MainViewModel : ObservableObject
         DeletePresetCommand = new RelayCommand(_ => DeleteSelectedPreset(), _ => SelectedPreset != null);
         DuplicatePresetCommand = new RelayCommand(_ => DuplicatePreset(), _ => SelectedPreset != null);
         ClearActivityCommand = new RelayCommand(_ => Activity.Clear());
-        PingCommand = new RelayCommand(async _ => await PingTargetAsync(),
+        PingCommand = new RelayCommand(async _ => await PingAsync(PingTarget),
             _ => !IsPinging && !string.IsNullOrWhiteSpace(PingTarget));
+        PingGatewayCommand = new RelayCommand(async _ => await PingAsync(SelectedAdapter?.Gateway),
+            _ => !IsPinging && !string.IsNullOrWhiteSpace(SelectedAdapter?.Gateway));
         OpenPresetsFolderCommand = new RelayCommand(_ => OpenPresetsFolder());
         OpenNetworkConnectionsCommand = new RelayCommand(_ => OpenNetworkConnections());
         ShowVersionCommand = new RelayCommand(_ => ShowVersionInfo());
@@ -178,7 +183,10 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(CurrentIpBadge));
                 OnPropertyChanged(nameof(CurrentGatewayBadge));
                 OnPropertyChanged(nameof(CurrentDnsBadge));
+                OnPropertyChanged(nameof(CurrentStatusKind));
+                OnPropertyChanged(nameof(GatewayPingLabel));
                 SyncPingTargetFromAdapter();
+                RefreshApplyState();
                 RaiseCommandStates();
             }
         }
@@ -192,10 +200,121 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _selectedPreset, value))
             {
                 BeginEditFromSelected();
+                OnPropertyChanged(nameof(HasSelectedPreset));
+                OnPropertyChanged(nameof(SelectedPresetSubnetText));
+                RefreshApplyState();
                 RaiseCommandStates();
             }
         }
     }
+
+    public bool HasSelectedPreset => SelectedPreset != null;
+
+    /// <summary>Subnet of the selected preset with its prefix length, e.g. "255.255.255.0 (/24)".</summary>
+    public string SelectedPresetSubnetText => FormatSubnet(SelectedPreset?.Subnet);
+
+    /// <summary>Groups already in use, offered as suggestions in the editor.</summary>
+    public IEnumerable<string> GroupNames => Presets
+        .Select(p => p.Group?.Trim() ?? string.Empty)
+        .Where(g => g.Length > 0)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(g => g, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    /// <summary>Rows that would change if the selected preset were applied to the selected adapter.</summary>
+    public IReadOnlyList<ApplyDiffItem> ApplyChanges => BuildApplyDiff().Where(d => d.IsChanged).ToList();
+
+    public bool HasApplyChanges => ApplyChanges.Count > 0;
+
+    public bool ShowApplyPanel => SelectedAdapter != null && SelectedPreset != null && !IsEditing;
+
+    public string ApplyTargetText => LF("Apply.Panel.Title", SelectedAdapter?.Name ?? string.Empty);
+
+    public string ApplyButtonText => LF("Apply.Button.Preset", SelectedPreset?.DisplayName ?? string.Empty);
+
+    public string CurrentStatusKind => SelectedAdapter?.StatusKind ?? "Unknown";
+
+    public string GatewayPingLabel => string.IsNullOrWhiteSpace(SelectedAdapter?.Gateway)
+        ? L("Ping.Gateway.None")
+        : L("Ping.Gateway");
+
+    public string PingResultText
+    {
+        get => _pingResultText;
+        private set => SetProperty(ref _pingResultText, value);
+    }
+
+    /// <summary>"None", "Success" or "Failure".</summary>
+    public string PingResultKind
+    {
+        get => _pingResultKind;
+        private set => SetProperty(ref _pingResultKind, value);
+    }
+
+    // Bound two-way to the language toggle buttons; unchecking the current language is ignored.
+    public bool IsJapanese
+    {
+        get => AppLocalization.CurrentLanguage == "ja-JP";
+        set => SetLanguage(value ? "ja-JP" : AppLocalization.CurrentLanguage);
+    }
+
+    public bool IsEnglish
+    {
+        get => !IsJapanese;
+        set => SetLanguage(value ? "en-US" : AppLocalization.CurrentLanguage);
+    }
+
+    public string AppVersion => LibraryCatalog.GetApplicationVersion();
+
+    /// <summary>True while editing and the form differs from the saved preset (or it is a new preset).</summary>
+    public bool IsDirty
+    {
+        get
+        {
+            if (!IsEditing || EditingPreset == null)
+            {
+                return false;
+            }
+
+            if (_isNewPreset || SelectedPreset == null)
+            {
+                return true;
+            }
+
+            return !PresetEquals(EditingPreset, SelectedPreset);
+        }
+    }
+
+    public int EditErrorCount =>
+        (IsIpInvalid ? 1 : 0) + (IsSubnetInvalid ? 1 : 0) + (IsGatewayInvalid ? 1 : 0) +
+        (IsDns1Invalid ? 1 : 0) + (IsDns2Invalid ? 1 : 0);
+
+    public string EditStatusText
+    {
+        get
+        {
+            var text = IsDirty ? L("Edit.Status.Dirty") : L("Edit.Status.Clean");
+            var errors = EditErrorCount;
+            return errors > 0 ? $"{text} · {LF("Edit.Status.Errors", errors)}" : text;
+        }
+    }
+
+    /// <summary>Shown under the subnet field when a prefix such as "/24" was typed.</summary>
+    public string SubnetHint
+    {
+        get
+        {
+            var subnet = EditingPreset?.Subnet ?? string.Empty;
+            if (IsEditing && Ipv4Validation.TryConvertPrefixToMask(subnet, out var mask))
+            {
+                return LF("Edit.Subnet.PrefixHint", mask);
+            }
+
+            return string.Empty;
+        }
+    }
+
+    public bool HasSubnetHint => !string.IsNullOrEmpty(SubnetHint);
 
     public NetworkPreset? EditingPreset
     {
@@ -214,12 +333,7 @@ public sealed class MainViewModel : ObservableObject
                     _editingPreset.PropertyChanged += OnEditingPresetPropertyChanged;
                 }
 
-                OnPropertyChanged(nameof(IsIpInvalid));
-                OnPropertyChanged(nameof(IsSubnetInvalid));
-                OnPropertyChanged(nameof(IsGatewayInvalid));
-                OnPropertyChanged(nameof(IsDns1Invalid));
-                OnPropertyChanged(nameof(IsDns2Invalid));
-                RaiseCommandStates();
+                RaiseEditState();
             }
         }
     }
@@ -231,7 +345,8 @@ public sealed class MainViewModel : ObservableObject
         {
             if (SetProperty(ref _isEditing, value))
             {
-                RaiseCommandStates();
+                OnPropertyChanged(nameof(ShowApplyPanel));
+                RaiseEditState();
             }
         }
     }
@@ -369,7 +484,8 @@ public sealed class MainViewModel : ObservableObject
     public string CurrentGatewayBadge => SelectedAdapter?.GatewayBadge ?? L("Label.GwNotSet");
     public string CurrentDnsBadge => SelectedAdapter?.DnsBadge ?? L("Label.DnsNotSet");
 
-    public bool CanApply => !IsApplying && SelectedAdapter != null && SelectedPreset != null;
+    // Never apply while the editor is open: the selected preset would not match what is on screen.
+    public bool CanApply => !IsApplying && !IsEditing && SelectedAdapter != null && SelectedPreset != null;
 
     public RelayCommand RefreshAdaptersCommand { get; }
     public RelayCommand ApplyCommand { get; }
@@ -381,6 +497,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand DuplicatePresetCommand { get; }
     public RelayCommand ClearActivityCommand { get; }
     public RelayCommand PingCommand { get; }
+    public RelayCommand PingGatewayCommand { get; }
     public RelayCommand OpenPresetsFolderCommand { get; }
     public RelayCommand OpenNetworkConnectionsCommand { get; }
     public RelayCommand ShowVersionCommand { get; }
@@ -488,8 +605,11 @@ public sealed class MainViewModel : ObservableObject
             foreach (var item in e.NewItems.OfType<NetworkPreset>())
             {
                 item.PropertyChanged += OnPresetPropertyChanged;
+                item.IsActive = IsPresetActive(item, SelectedAdapter);
             }
         }
+
+        OnPropertyChanged(nameof(GroupNames));
     }
 
     private void OnPresetPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -502,40 +622,130 @@ public sealed class MainViewModel : ObservableObject
 
     private void OnEditingPresetPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(NetworkPreset.IP))
+        if (e.PropertyName is nameof(NetworkPreset.IsActive) or nameof(NetworkPreset.DisplayName) or nameof(NetworkPreset.IpLine))
         {
-            OnPropertyChanged(nameof(IsIpInvalid));
-            RaiseCommandStates();
+            return;
         }
-        else if (e.PropertyName == nameof(NetworkPreset.Subnet))
+
+        RaiseEditState();
+    }
+
+    private void RaiseEditState()
+    {
+        OnPropertyChanged(nameof(IsIpInvalid));
+        OnPropertyChanged(nameof(IsSubnetInvalid));
+        OnPropertyChanged(nameof(IsGatewayInvalid));
+        OnPropertyChanged(nameof(IsDns1Invalid));
+        OnPropertyChanged(nameof(IsDns2Invalid));
+        OnPropertyChanged(nameof(IsDirty));
+        OnPropertyChanged(nameof(EditErrorCount));
+        OnPropertyChanged(nameof(EditStatusText));
+        OnPropertyChanged(nameof(SubnetHint));
+        OnPropertyChanged(nameof(HasSubnetHint));
+        RaiseCommandStates();
+    }
+
+    private static bool PresetEquals(NetworkPreset a, NetworkPreset b)
+    {
+        return string.Equals(a.Name, b.Name, StringComparison.Ordinal) &&
+               string.Equals(a.Group, b.Group, StringComparison.Ordinal) &&
+               string.Equals(a.IP, b.IP, StringComparison.Ordinal) &&
+               string.Equals(a.Subnet, b.Subnet, StringComparison.Ordinal) &&
+               string.Equals(a.Gateway, b.Gateway, StringComparison.Ordinal) &&
+               string.Equals(a.DNS1, b.DNS1, StringComparison.Ordinal) &&
+               string.Equals(a.DNS2, b.DNS2, StringComparison.Ordinal) &&
+               string.Equals(a.Comment, b.Comment, StringComparison.Ordinal);
+    }
+
+    private static string FormatSubnet(string? subnet)
+    {
+        var mask = Ipv4Validation.NormalizeSubnet(subnet ?? string.Empty);
+        if (mask.Length == 0)
         {
-            OnPropertyChanged(nameof(IsSubnetInvalid));
-            RaiseCommandStates();
+            return string.Empty;
         }
-        else if (e.PropertyName == nameof(NetworkPreset.Gateway))
+
+        var prefix = Ipv4Validation.GetPrefixLength(mask);
+        return prefix > 0 ? $"{mask} (/{prefix})" : mask;
+    }
+
+    private static string DisplayValue(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value.Trim();
+
+    /// <summary>Compares the selected adapter's current IPv4 settings with the selected preset.</summary>
+    internal List<ApplyDiffItem> BuildApplyDiff()
+    {
+        var items = new List<ApplyDiffItem>();
+        var adapter = SelectedAdapter;
+        var preset = SelectedPreset;
+        if (adapter == null || preset == null)
         {
-            OnPropertyChanged(nameof(IsGatewayInvalid));
-            RaiseCommandStates();
+            return items;
         }
-        else if (e.PropertyName == nameof(NetworkPreset.DNS1))
+
+        var currentDhcp = adapter.IsDhcp;
+        items.Add(new ApplyDiffItem(L("Main.Label.Mode"),
+            currentDhcp ? L("Mode.Dhcp") : L("Mode.Static"),
+            preset.IsDhcp ? L("Mode.Dhcp") : L("Mode.Static"),
+            currentDhcp != preset.IsDhcp));
+
+        if (preset.IsDhcp)
         {
-            OnPropertyChanged(nameof(IsDns1Invalid));
-            RaiseCommandStates();
+            var auto = L("Apply.Value.Auto");
+            items.Add(new ApplyDiffItem(L("Main.Label.IpAddress"), DisplayValue(adapter.Ipv4Address), auto, false));
+            items.Add(new ApplyDiffItem(L("Main.Label.Dns1"), DisplayValue(adapter.Dns1), auto, false));
+            return items;
         }
-        else if (e.PropertyName == nameof(NetworkPreset.DNS2))
+
+        var presetMask = Ipv4Validation.NormalizeSubnet(preset.Subnet);
+        if (presetMask.Length == 0)
         {
-            OnPropertyChanged(nameof(IsDns2Invalid));
-            RaiseCommandStates();
+            presetMask = "255.255.255.0";
         }
-        else if (e.PropertyName == nameof(NetworkPreset.IsDhcp))
+
+        void AddRow(string labelKey, string current, string after)
         {
-            OnPropertyChanged(nameof(IsIpInvalid));
-            OnPropertyChanged(nameof(IsSubnetInvalid));
-            OnPropertyChanged(nameof(IsGatewayInvalid));
-            OnPropertyChanged(nameof(IsDns1Invalid));
-            OnPropertyChanged(nameof(IsDns2Invalid));
-            RaiseCommandStates();
+            var changed = !string.Equals(current.Trim(), after.Trim(), StringComparison.OrdinalIgnoreCase);
+            items.Add(new ApplyDiffItem(L(labelKey), DisplayValue(current), DisplayValue(after), changed));
         }
+
+        AddRow("Main.Label.IpAddress", adapter.Ipv4Address, preset.IP);
+        AddRow("Main.Label.Subnet", adapter.Ipv4Mask, presetMask);
+        AddRow("Main.Label.Gateway", adapter.Gateway, preset.Gateway);
+        AddRow("Main.Label.Dns1", adapter.Dns1, preset.DNS1);
+        AddRow("Main.Label.Dns2", adapter.Dns2, preset.DNS2);
+        return items;
+    }
+
+    /// <summary>True when the preset matches the adapter's current settings (shown as "Applied").</summary>
+    internal static bool IsPresetActive(NetworkPreset preset, AdapterViewModel? adapter)
+    {
+        if (adapter == null || !adapter.IsUp)
+        {
+            return false;
+        }
+
+        if (preset.IsDhcp)
+        {
+            return adapter.IsDhcp;
+        }
+
+        return !adapter.IsDhcp &&
+               !string.IsNullOrWhiteSpace(preset.IP) &&
+               string.Equals(preset.IP.Trim(), adapter.Ipv4Address, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RefreshApplyState()
+    {
+        foreach (var preset in Presets)
+        {
+            preset.IsActive = IsPresetActive(preset, SelectedAdapter);
+        }
+
+        OnPropertyChanged(nameof(ApplyChanges));
+        OnPropertyChanged(nameof(HasApplyChanges));
+        OnPropertyChanged(nameof(ShowApplyPanel));
+        OnPropertyChanged(nameof(ApplyTargetText));
+        OnPropertyChanged(nameof(ApplyButtonText));
     }
 
     private void BeginNewPreset()
@@ -601,6 +811,11 @@ public sealed class MainViewModel : ObservableObject
         {
             EditingPreset.Subnet = "255.255.255.0";
         }
+        else if (!EditingPreset.IsDhcp)
+        {
+            // "/24" or "24" is stored as the dotted mask so the CSV stays in its documented format.
+            EditingPreset.Subnet = Ipv4Validation.NormalizeSubnet(EditingPreset.Subnet);
+        }
 
         if (!ValidatePreset(EditingPreset))
         {
@@ -646,6 +861,9 @@ public sealed class MainViewModel : ObservableObject
 
         PresetsView.Refresh();
         BeginEditFromSelected();
+        OnPropertyChanged(nameof(GroupNames));
+        OnPropertyChanged(nameof(SelectedPresetSubnetText));
+        RefreshApplyState();
 
         AddActivity(new ActivityItem(L("Activity.PresetSavedTitle"), LF("Msg.PresetSaved", SelectedPreset?.Name ?? string.Empty), ActivityLevel.Success));
         ClearError();
@@ -721,16 +939,20 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        if (selectedAdapter.Adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
-        {
-            var result = _dialogService.Show(
-                L("Msg.ConfirmWireless"),
-                L("Msg.ConfirmTitle"),
-                MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+        selectedPreset.Subnet = Ipv4Validation.NormalizeSubnet(selectedPreset.Subnet);
 
-            if (result != MessageBoxResult.Yes)
+        var isWireless = selectedAdapter.Adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211;
+        if (isWireless || !_skipWiredApplyConfirmation)
+        {
+            var confirmation = new ApplyConfirmation(selectedPreset.DisplayName, selectedAdapter.DisplayName, isWireless, BuildApplyDiff());
+            if (!_dialogService.ConfirmApply(confirmation, out var skipNext))
             {
                 return;
+            }
+
+            if (!isWireless && skipNext)
+            {
+                _skipWiredApplyConfirmation = true;
             }
         }
 
@@ -808,15 +1030,17 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private async Task PingTargetAsync()
+    private async Task PingAsync(string? rawTarget)
     {
-        var target = PingTarget?.Trim();
+        var target = rawTarget?.Trim();
         if (string.IsNullOrWhiteSpace(target))
         {
             return;
         }
 
         IsPinging = true;
+        PingResultKind = "None";
+        PingResultText = LF("Ping.Result.Running", target);
         try
         {
             using var ping = new Ping();
@@ -824,17 +1048,23 @@ public sealed class MainViewModel : ObservableObject
 
             if (reply.Status == IPStatus.Success)
             {
+                PingResultKind = "Success";
+                PingResultText = LF("Ping.Result.Success", target, reply.RoundtripTime);
                 AddActivity(new ActivityItem(L("Activity.PingTitle"),
                     LF("Msg.PingSuccess", reply.Address, reply.RoundtripTime), ActivityLevel.Success));
             }
             else
             {
+                PingResultKind = "Failure";
+                PingResultText = LF("Ping.Result.Failure", target, reply.Status);
                 AddActivity(new ActivityItem(L("Activity.PingTitle"),
                     LF("Msg.PingFailed", reply.Status), ActivityLevel.Warning));
             }
         }
         catch (Exception ex)
         {
+            PingResultKind = "Failure";
+            PingResultText = LF("Ping.Result.Failure", target, ex.GetBaseException().Message);
             AddActivity(new ActivityItem(L("Activity.PingTitle"),
                 LF("Msg.PingFailed", ex.Message), ActivityLevel.Error));
         }
@@ -1424,6 +1654,21 @@ public sealed class MainViewModel : ObservableObject
         SavePresets();
     }
 
+    private void SetLanguage(string? culture)
+    {
+        if (string.IsNullOrWhiteSpace(culture) ||
+            string.Equals(culture, AppLocalization.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+        {
+            // Clicking the already-selected language toggles its button off; restore it.
+            OnPropertyChanged(nameof(IsJapanese));
+            OnPropertyChanged(nameof(IsEnglish));
+            return;
+        }
+
+        AppLocalization.SetLanguage(culture);
+        SavePresets();
+    }
+
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
         foreach (var adapter in Adapters)
@@ -1441,6 +1686,13 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CurrentIpBadge));
         OnPropertyChanged(nameof(CurrentGatewayBadge));
         OnPropertyChanged(nameof(CurrentDnsBadge));
+        OnPropertyChanged(nameof(GatewayPingLabel));
+        OnPropertyChanged(nameof(IsJapanese));
+        OnPropertyChanged(nameof(IsEnglish));
+        OnPropertyChanged(nameof(SelectedPresetSubnetText));
+        OnPropertyChanged(nameof(EditStatusText));
+        OnPropertyChanged(nameof(SubnetHint));
+        RefreshApplyState();
         PresetsView.Refresh();
     }
 
@@ -1453,6 +1705,7 @@ public sealed class MainViewModel : ObservableObject
         SavePresetCommand.RaiseCanExecuteChanged();
         CancelEditCommand.RaiseCanExecuteChanged();
         PingCommand.RaiseCanExecuteChanged();
+        PingGatewayCommand.RaiseCanExecuteChanged();
         OpenPresetsFolderCommand.RaiseCanExecuteChanged();
     }
 

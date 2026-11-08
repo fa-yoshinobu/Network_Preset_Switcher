@@ -42,9 +42,41 @@ public sealed class AdapterViewModel : ObservableObject
         _ => Adapter.NetworkInterfaceType.ToString()
     };
 
-    public string StatusBadge => Adapter.OperationalStatus == OperationalStatus.Up
-        ? L("Status.Connected")
-        : L("Status.Disconnected");
+    /// <summary>"Connected", "Disconnected" or "Unknown"; drives the status badge colour.</summary>
+    public string StatusKind
+    {
+        get
+        {
+            try
+            {
+                return Adapter.OperationalStatus switch
+                {
+                    OperationalStatus.Up => "Connected",
+                    OperationalStatus.Down or OperationalStatus.NotPresent or OperationalStatus.LowerLayerDown => "Disconnected",
+                    _ => "Unknown"
+                };
+            }
+            catch
+            {
+                return "Unknown";
+            }
+        }
+    }
+
+    public bool IsUp => StatusKind == "Connected";
+
+    public string StatusBadge => StatusKind switch
+    {
+        "Connected" => L("Status.Connected"),
+        "Disconnected" => L("Status.Disconnected"),
+        _ => L("Status.Unknown")
+    };
+
+    public string Ipv4Mask => GetIpv4Info()?.Mask ?? string.Empty;
+
+    public string Dns1 => GetDnsList().ElementAtOrDefault(0) ?? string.Empty;
+
+    public string Dns2 => GetDnsList().ElementAtOrDefault(1) ?? string.Empty;
 
     public string ModeBadge => IsDhcp ? L("Mode.Dhcp") : L("Mode.Static");
 
@@ -145,27 +177,25 @@ public sealed class AdapterViewModel : ObservableObject
         }
     }
 
-    public string DnsServers
+    public string DnsServers => string.Join(", ", GetDnsList());
+
+    private System.Collections.Generic.List<string> GetDnsList()
     {
-        get
+        try
         {
-            try
-            {
-                var properties = Adapter.GetIPProperties();
-                var dnsList = properties.DnsAddresses
-                    .Where(d => d.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                    .Select(d => d.ToString())
-                    .ToList();
-                return string.Join(", ", dnsList);
-            }
-            catch
-            {
-                return string.Empty;
-            }
+            var properties = Adapter.GetIPProperties();
+            return properties.DnsAddresses
+                .Where(d => d.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                .Select(d => d.ToString())
+                .ToList();
+        }
+        catch
+        {
+            return new System.Collections.Generic.List<string>();
         }
     }
 
-    public string DetailLine => $"{TypeName}{Separator}{SpeedText}{Separator}MAC {MacAddress}";
+    public string DetailLine => $"{TypeName}{Separator}{SpeedText}{Separator}MAC {MacAddress}{Separator}{DeviceName} ({Manufacturer})";
 
     public void RefreshLocalizedText()
     {
