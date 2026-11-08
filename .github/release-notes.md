@@ -15,6 +15,8 @@ Requirements: Windows x64. The .NET runtime is included. Changing network settin
 - Display actual bundled library versions in the version information window.
 
 ### Fixed
+- Speed up startup and adapter refresh by querying device information once for all adapters.
+- Limit adapter candidates to those shown in Windows Network Connections, excluding hidden filter layers and no-longer-present device entries. If adapter discovery is unavailable, retain the existing fallback list.
 - Prevent Enter in editor or Ping fields from applying a preset without confirmation.
 - Correct disconnected status badges and button padding.
 - Prevent duplicate build output directories and consolidate redundant DHCP test coverage.
