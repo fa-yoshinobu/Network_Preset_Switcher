@@ -33,25 +33,13 @@ public class NetworkPresetTests
     }
 
     [Fact]
-    public void NetworkPreset_SettingIsDhcpToTrue_UpdatesIp()
-    {
-        // Arrange
-        var preset = new NetworkPreset { IP = "192.168.1.10" };
-
-        // Act
-        preset.IsDhcp = true;
-
-        // Assert
-        Assert.Equal("dhcp", preset.IP);
-        Assert.True(preset.IsDhcp);
-    }
-
-    [Fact]
     public void NetworkPreset_SettingIsDhcpToFalse_RestoresLastStaticIp()
     {
         // Arrange
         var preset = new NetworkPreset { IP = "192.168.1.10" };
         preset.IsDhcp = true; // This should save "192.168.1.10" as last static IP
+        Assert.Equal("dhcp", preset.IP);
+        Assert.True(preset.IsDhcp);
 
         // Act
         preset.IsDhcp = false;
