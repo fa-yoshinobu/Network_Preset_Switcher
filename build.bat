@@ -6,7 +6,7 @@ cd /d "%~dp0"
 set "PROJECT=NetworkPresetSwitcher\NetworkPresetSwitcher.csproj"
 set "CONFIG=Release"
 set "RUNTIME=win-x64"
-set "NPS_PUBLISH_DIR=artifacts\publish"
+set "NPS_PUBLISH_DIR=artifacts\release"
 set "DO_CLEAN=0"
 
 if /I "%~1"=="clean" set "DO_CLEAN=1"
@@ -45,6 +45,12 @@ dotnet publish "%PROJECT%" ^
   /p:DebugType=None ^
   /p:DebugSymbols=false ^
   -o "%NPS_PUBLISH_DIR%"
+if errorlevel 1 goto :error
+
+powershell -NoProfile -File "%~dp0.github\scripts\package_release.ps1" -OutputDirectory "%NPS_PUBLISH_DIR%" -Runtime "%RUNTIME%"
+if errorlevel 1 goto :error
+
+powershell -NoProfile -File "%~dp0.github\scripts\package_release.ps1" -OutputDirectory "%NPS_PUBLISH_DIR%" -Runtime "%RUNTIME%"
 if errorlevel 1 goto :error
 
 echo [3/3] done.

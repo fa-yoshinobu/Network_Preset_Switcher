@@ -49,12 +49,16 @@ jobs:
         run: dotnet test NetworkPresetSwitcher.sln -c Release --no-build --verbosity normal
 
       - name: Publish single-file executable
-        run: dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\publish
+        run: dotnet publish NetworkPresetSwitcher\NetworkPresetSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts\release
+
+      - name: Package distribution
+        shell: pwsh
+        run: ./.github/scripts/package_release.ps1
 
       - name: Verify publish output
         shell: pwsh
         run: |
-          $exe = "artifacts/publish/NetworkPresetSwitcher.exe"
+          $exe = "artifacts/release/NetworkPresetSwitcher.exe"
           if (-not (Test-Path $exe)) {
             throw "Single-file executable was not created: $exe"
           }

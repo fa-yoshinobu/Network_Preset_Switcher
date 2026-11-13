@@ -30,7 +30,7 @@ build.bat
 ```
 
 Output:
-`artifacts\publish\NetworkPresetSwitcher.exe`
+`artifacts\release\NetworkPresetSwitcher.exe`
 
 ## CI Check
 ```
@@ -93,7 +93,7 @@ build.bat
 ```
 
 出力先:
-`artifacts\publish\NetworkPresetSwitcher.exe`
+`artifacts\release\NetworkPresetSwitcher.exe`
 
 ## CI チェック
 ```
@@ -141,8 +141,10 @@ The fixed-name ZIP and checksum links below are available for the current releas
 
 Extract the ZIP file, then run `NetworkPresetSwitcher.exe`.
 
-Windows x64. The .NET runtime is included. Changing network settings may require administrator privileges.
+Windows x64. The .NET runtime is included. Administrator privileges and approval of the Windows UAC prompt are required to start the app.
 
 Release notes and VirusTotal scan messages are in English. Existing project documents may keep their current language.
 
 Maintainers: update the English Changes section in `.github/release-notes.md` from the relevant CHANGELOG entries before releasing. The release workflow publishes the ZIP and checksum, then scans the actual published executables. Use the `Scan release with VirusTotal` workflow with a release tag to retry an incomplete scan. See the [shared release standard](https://github.com/fa-yoshinobu/release_standard).
+
+ローカル配布物は `build.bat` で作成します。起動EXEは `artifacts/release/NetworkPresetSwitcher.exe`、配布ZIPは `artifacts/release/NetworkPresetSwitcher-win-x64.zip`、SHA-256は同ZIPの `.sha256` です。ZIPを展開し、EXEを直接起動してください。旧出力フォルダーは自動削除しません。
