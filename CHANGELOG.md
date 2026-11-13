@@ -7,6 +7,12 @@ Git のタグ・コミット差分から、利用者向けの変更と主要な�
 
 ## [Unreleased]
 
+### Changed
+
+- Align local and CI executable, fixed-name ZIP and UTF-8/LF SHA-256 output under `artifacts/release/`; preserve required distribution files and require the VirusTotal API SHA-256 to match.
+- Align local and CI executable, fixed-name ZIP and UTF-8/LF SHA-256 output under `artifacts/release/`; preserve required distribution files and require the VirusTotal API SHA-256 to match.
+
+
 ## [1.1.1] - 2026-11-08
 
 ### Fixed

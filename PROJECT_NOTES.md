@@ -1,4 +1,4 @@
-﻿# NetworkPresetSwitcher - 仕様・履歴メモ
+# NetworkPresetSwitcher - 仕様・履歴メモ
 
 このドキュメントは、設計意図・変更履歴・運用上の注意点をまとめたメモです。
 
@@ -20,7 +20,7 @@
 ## ビルド / 配布
 - `build.bat` で self-contained / single-file publish
 - `ci.bat` で restore / format / build / test / publish smoke test
-- 出力: `artifacts\publish\NetworkPresetSwitcher.exe`
+- 出力: `artifacts\release\NetworkPresetSwitcher.exe`
 - exe アイコン: `AppIcon.ico`
 
 ## バージョン / ライセンス
