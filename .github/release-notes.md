@@ -5,7 +5,7 @@
 ## Getting started
 Extract the ZIP file, then run `NetworkPresetSwitcher.exe`.
 
-Requirements: Windows 10 or later (x64). The .NET runtime is included. Administrator privileges and approval of the Windows UAC prompt are required to start the app.
+Requirements: Windows 10 or later (x64). The .NET 10.0.15 runtime is included. Administrator privileges and approval of the Windows UAC prompt are required to start the app.
 
 ## Changes
 ### Changed

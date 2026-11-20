@@ -20,7 +20,7 @@ A WPF app for Windows to switch IP settings using presets.
 - Presets saved in CSV (editable in Excel)
 
 ## Build
-Requires the .NET 10 SDK on Windows. The single-file EXE bundles .NET 10.0.14;
+Requires the .NET 10 SDK on Windows. The single-file EXE built from this source bundles .NET 10.0.15;
 users do not need to install .NET separately. Update `RuntimeFrameworkVersion`
 and `System.Management` in the app project and rebuild the distribution when
 installing runtime security updates.
